@@ -6,6 +6,7 @@ Final project for UCSD CSE230 Fa21
 Collaborators:
 
 - Wenzhe Zhang (A59002032)
+- Linfang He   (A59002470)
 
 
 
