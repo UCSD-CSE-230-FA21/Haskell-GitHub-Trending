@@ -7,6 +7,7 @@ Collaborators:
 - Wenzhe Zhang (A59002032)
 - Linfang He   (A59002470)
 - Xinhao Luo (A59012359)
+- Aiwei YIN (A59004363)
 
 
 ### Goal
