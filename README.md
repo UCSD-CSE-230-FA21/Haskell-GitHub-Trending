@@ -42,3 +42,15 @@ User could mark a repository as `read`, and this mark would be stored in file lo
 - https://github.com/phadej/github Github API for fetching repo stat
 - https://github.com/haskell/aeson JSON parser
 - https://hackage.haskell.org/package/req Network Request
+
+
+## Setup
+
+To Run the project, simply do
+
+```bash
+stack build
+stack run
+```
+
+be sure you have stack installed.
