@@ -14,7 +14,7 @@ Collaborators:
 
 #### Description
 
-GitHub Trending include recent most popular GitHub repositories, and users could click in to see the details of these repositories. Here is a screenshot of the UI of GitHub Trending:
+GitHub Trending include recent most popular public GitHub repositories, and users could click in to see the details of these repositories. Here is a screenshot of the UI of GitHub Trending:
 
 ![TrendingUI](./img/TrendingUI.png)
 
@@ -43,6 +43,60 @@ User could mark a repository as `read`, and this mark would be stored in file lo
 - https://github.com/haskell/aeson JSON parser
 - https://hackage.haskell.org/package/req Network Request
 
+#### Public APIs for GitHub Repo Search
+
+> ```sh
+> curl -G https://api.github.com/search/repositories --data-urlencode "sort=stars" --data-urlencode "order=desc" --data-urlencode "q=language:java"  --data-urlencode "q=created:>`date -v-7d '+%Y-%m-%d'`"
+> ```
+
+Postman example: (Get)
+
+```shell
+https://api.github.com/search/repositories?sort=stars&order=desc&q=language:java&q=created:>2021-11-26
+```
+
+The result looks like:
+
+```
+{
+    "total_count": 609,
+    "incomplete_results": false,
+    "items": [
+        {
+            "id": 432357535,
+            "node_id": "R_kgDOGcVAnw",
+            "name": "ShadyAddons",
+            "full_name": "4wl/ShadyAddons",
+            "private": false,
+            "owner": {
+                "login": "4wl",
+                "id": 69080903,
+            },
+            "description": "Not fixed.",
+            "fork": false,
+            "url": "https://api.github.com/repos/4wl/ShadyAddons",
+            "size": 514,
+            "created_at": "2021-11-27T03:22:33Z",
+            "updated_at": "2021-11-27T04:42:37Z",
+            "pushed_at": "2021-11-27T03:33:55Z",
+            "stargazers_count": 3,
+            "watchers_count": 3,
+            "language": "Java",
+            "forks_count": 1,
+            "archived": false,
+            "disabled": false,
+            "open_issues_count": 0,
+            "license": null,
+            "visibility": "public",
+            "default_branch": "main",
+            "score": 1.0
+        },
+        ...
+    ]
+}     
+```
+
+Only parameters could be used in this project have been displayed; Others are omitted.
 
 ## Setup
 
