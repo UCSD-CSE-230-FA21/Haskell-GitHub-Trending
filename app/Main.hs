@@ -3,6 +3,7 @@ module Main where
 import qualified Model.Lib as L
 import qualified Model.Data as D
 import qualified Network as N
+import Control.Exception
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Brick
 
@@ -15,18 +16,18 @@ main = simpleMain version
 
 -- The following is for testing/playground 
 -- >>> readme
--- "SGVsbG8gV29ybGQhCg=="
 -- "Right \"Hello World!\\n\""
 --
 readme :: IO ()
 readme = 
   let 
     author = "octocat";
-    repo = "hello-world";
+    repo = "hello-world"; -- change to something else and see error
   in do
-    r <- N.getReadmeRequest $ D.RepositoryIdentifier author repo
-    print $ D.rContent r
-    print $ show $ D.convertReadmeContent r
+    r <- try $ N.getReadmeRequest $ D.RepositoryIdentifier author repo :: IO (Either SomeException D.Readme)
+    case r of
+        Left err -> print $ "Error: " ++ show err
+        Right rd -> print $ show $ D.convertReadmeContent rd
 
 -- >>> trending
 -- "TrendingResponse {totalCount = 39797288, repos = 

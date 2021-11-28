@@ -29,6 +29,9 @@ dependencies:
 - base64-bytestring
 - utf8-string
 - time
+- tasty
+- tasty-hunit
+- split
 
 library:
   source-dirs: src
