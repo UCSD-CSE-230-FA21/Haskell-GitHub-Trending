@@ -98,6 +98,40 @@ The result looks like:
 
 Only parameters could be used in this project have been displayed; Others are omitted.
 
+
+
+## Milestone 2 Update
+
+### Architecture
+
+![architecture](./img/architecture.png)
+
+There would be three main modules in our application.
+
+1. Network module: it is used to communicate with GitHub via Http calls. Query conditions should be provided from end user when making a call. The retrieved responses would be interpreted into data type which is pre-defined.
+2. Storage module: it is used to read and write the filing storing flag (e.g. user marks a repo) information on disk.
+3. Display module: it is used to receive data from Network module, and query whether a repo has been marked through Storage module. Then this module would integrate the two parts and organize data to display for end users. Also it should receive commands from end users, and pass these commands to relevant downstream modules.
+
+### Challenges
+
+There are mainly two challenges:
+
+1. There are no public GitHub trending APIs.
+2. How to deal with API call exceptions.
+
+For the first one, there are two ways to solve it:
+
+1. There is a public server providing request-forwarding-like function, which could receive our requests and send the trending results to us.
+2. We could assemble query conditions and make use of public GitHub repo query APIs, and we should process the returned data to retrieve trending results.
+
+The first one is much easier to operate, however, the second is much more stable and reliable. So in the end, we decided to move forward with the second solution.
+
+For the second challenge, which did not come to our minds until Nov 27, 2021, when GitHub was down for a long while. We then realized we must handle the exceptions from API calls. In this way, we decided to display the error message directly to end users, but we may change this solution to a wrapped and user-friendly error message.
+
+### Schedule
+
+By far, we could finish all the goals we set up before deadline.
+
 ## Setup
 
 To Run the project, simply do
