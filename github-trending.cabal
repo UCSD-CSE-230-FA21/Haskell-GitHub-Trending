@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8e91e0c975b143ab19ddb224a7eb1c4c9851f9a6cd463768619b213e43c2a215
+-- hash: 1276f942708388e05c3b7bd2d5b6528c95ec0166b3f625d7c5bc2e5a84aec896
 
 name:           github-trending
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Model.Data
       Model.Lib
+      Model.Storage
       Network
   other-modules:
       Paths_github_trending
@@ -47,6 +48,8 @@ library
     , text
     , time
     , utf8-string
+    , containers
+    , mtl
   default-language: Haskell2010
 
 executable github-trending-exe
