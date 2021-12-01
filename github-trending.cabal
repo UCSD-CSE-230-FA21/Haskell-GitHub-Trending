@@ -100,4 +100,5 @@ test-suite github-trending-test
     , text
     , time
     , utf8-string
+    , mtl
   default-language: Haskell2010

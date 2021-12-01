@@ -24,21 +24,31 @@ data Record = Record {
 dictionary :: Map.Map String Record
 dictionary = Map.empty
 
-addOrUpdate :: D.RepositoryIdentifier -> Record -> FilePath -> State (Map.Map String Record) ()
-addOrUpdate idt r fp = do
+addOrUpdate' :: D.RepositoryIdentifier -> Record -> State (Map.Map String Record) (Map.Map String Record)
+addOrUpdate' idt r = do
     let key = extractId idt
     dict <- get
-    let newDict = Map.insert key r dict
-    let _ =  writeBookMark fp newDict
-    put newDict
+    put (Map.insert key r dict)
+    return dict
 
-delete :: D.RepositoryIdentifier -> FilePath -> State (Map.Map String Record) ()
-delete idt fp = do
+addOrUpdate :: D.RepositoryIdentifier -> Record -> FilePath -> State (Map.Map String Record) Bool
+addOrUpdate idt r fp = do
+    dict <- addOrUpdate' idt r
+    let _ = writeBookMark fp dict
+    return True
+
+delete' :: D.RepositoryIdentifier -> State (Map.Map String Record) (Map.Map String Record)
+delete' idt = do
     let key = extractId idt
     dict <- get
-    let newDict = Map.delete key dict
-    let _ = writeBookMark fp newDict
-    put newDict
+    put (Map.delete key dict)
+    return dict
+
+delete :: D.RepositoryIdentifier -> FilePath -> State (Map.Map String Record) Bool
+delete idt fp = do
+    dict <- delete' idt
+    let _ = writeBookMark fp dict
+    return True
 
 exist :: D.RepositoryIdentifier -> State (Map.Map String Record) Bool
 exist idt = do
@@ -57,6 +67,9 @@ extractIdFromRecord r = extractId (idt r)
 generateFromId :: String -> String -> D.RepositoryIdentifier
 generateFromId = D.RepositoryIdentifier
 
+mapSize :: State (Map.Map String Record) Int
+mapSize = do
+    gets Map.size
 
 
 defaultPath :: String
@@ -90,7 +103,6 @@ init :: FilePath -> StateT (Map.Map String Record) IO ()
 init fp = do
     ls <- lift (loadBookMark fp)
     mapM_ fillIn ls
-    lift (putStrLn "init finished")
 
 fillIn :: String -> StateT (Map.Map String Record) IO ()
 fillIn line = do
