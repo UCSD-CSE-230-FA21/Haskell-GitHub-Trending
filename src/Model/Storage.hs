@@ -31,11 +31,11 @@ addOrUpdate' idt r = do
     put (Map.insert key r dict)
     return dict
 
-addOrUpdate :: D.RepositoryIdentifier -> Record -> FilePath -> State (Map.Map String Record) Bool
+addOrUpdate :: D.RepositoryIdentifier -> Record -> FilePath -> State (Map.Map String Record) ()
 addOrUpdate idt r fp = do
     dict <- addOrUpdate' idt r
     let _ = writeBookMark fp dict
-    return True
+    return ()
 
 delete' :: D.RepositoryIdentifier -> State (Map.Map String Record) (Map.Map String Record)
 delete' idt = do
@@ -44,11 +44,11 @@ delete' idt = do
     put (Map.delete key dict)
     return dict
 
-delete :: D.RepositoryIdentifier -> FilePath -> State (Map.Map String Record) Bool
+delete :: D.RepositoryIdentifier -> FilePath -> State (Map.Map String Record) ()
 delete idt fp = do
     dict <- delete' idt
     let _ = writeBookMark fp dict
-    return True
+    return ()
 
 exist :: D.RepositoryIdentifier -> State (Map.Map String Record) Bool
 exist idt = do
