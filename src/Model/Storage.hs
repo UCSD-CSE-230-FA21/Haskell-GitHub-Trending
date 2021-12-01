@@ -58,6 +58,14 @@ exist idt = do
         Nothing -> return False
         Just _ -> return True
 
+existMany :: [D.RepositoryIdentifier] -> State (Map.Map String Record) [Bool]
+existMany [] = do 
+    return []
+existMany (idt:idts) = do
+    mark <- exist idt
+    others <- existMany idts
+    return (mark : others)
+
 extractId :: D.RepositoryIdentifier -> String
 extractId idt = D.ridOwner idt ++ "," ++ D.ridName idt
 

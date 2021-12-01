@@ -43,11 +43,13 @@ mapTest = testGroup "Testing map operations"
         testCase "Should not find from empty map" $
             evalState (MS.exist idt1) MS.dictionary @?= False,
         testCase "Should successfully insert into map" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.addOrUpdate' idt2 r2; MS.mapSize}) MS.dictionary@?= 2,
+            evalState (do {MS.addOrUpdate' idt1 r1; MS.addOrUpdate' idt2 r2; MS.mapSize}) MS.dictionary @?= 2,
         testCase "Should successfully delete from map" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.delete' idt1; MS.delete' idt2; MS.mapSize}) MS.dictionary@?= 0,
+            evalState (do {MS.addOrUpdate' idt1 r1; MS.delete' idt1; MS.delete' idt2; MS.mapSize}) MS.dictionary @?= 0,
         testCase "Should successfully find from map" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.addOrUpdate' idt2 r2; MS.exist idt1}) MS.dictionary@?= True
+            evalState (do {MS.addOrUpdate' idt1 r1; MS.addOrUpdate' idt2 r2; MS.exist idt1}) MS.dictionary @?= True,
+        testCase "Should test many repos marked" $
+            evalState (do {MS.addOrUpdate' idt1 r1; MS.existMany [idt1, idt2]}) MS.dictionary @?= [True, False]
     ]
 
 
