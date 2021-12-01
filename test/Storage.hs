@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Storage where
 
@@ -10,6 +11,7 @@ import           Control.Monad.State
 import qualified Model.Data as MD
 import Data.Time (parseTimeOrError)
 import Data.Time.Format (defaultTimeLocale)
+import System.Directory
 import qualified Model.Storage as MS
 
 idt1 = MD.RepositoryIdentifier "a1" "b-1"
@@ -37,21 +39,47 @@ storageFileParsingTest = testGroup "Testing storageFileParsing"
         @?= True
     ]
 
-mapTest :: TestTree
-mapTest = testGroup "Testing map operations"
+
+fileTest :: TestTree
+fileTest = testGroup "Testing IO operations"
     [
-        testCase "Should not find from empty map" $
-            evalState (MS.exist idt1) MS.dictionary @?= False,
-        testCase "Should successfully insert into map" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.addOrUpdate' idt2 r2; MS.mapSize}) MS.dictionary @?= 2,
-        testCase "Should successfully delete from map" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.delete' idt1; MS.delete' idt2; MS.mapSize}) MS.dictionary @?= 0,
-        testCase "Should successfully find from map" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.addOrUpdate' idt2 r2; MS.exist idt1}) MS.dictionary @?= True,
-        testCase "Should test many repos marked" $
-            evalState (do {MS.addOrUpdate' idt1 r1; MS.existMany [idt1, idt2]}) MS.dictionary @?= [True, False]
+        testCase "Should not find from empty map" $ do
+            f <- evalStateT (MS.exist idt1) MS.dictionary 
+            f @?= False,
+        testCase "Should successfully insert into map" $ do
+            let storePath1 = storePath ++ "1"
+            s <- evalStateT (do {MS.addOrUpdate idt1 r1 storePath1; MS.addOrUpdate idt2 r2 storePath1; MS.mapSize}) MS.dictionary 
+            removeFile storePath1
+            s @?= 2,
+        testCase "Should successfully delete from map" $ do
+            let storePath2 = storePath ++ "2"
+            s <- evalStateT (do {MS.addOrUpdate idt1 r1 storePath2; MS.delete idt1 storePath2; MS.delete idt2 storePath2; MS.mapSize}) MS.dictionary 
+            removeFile storePath2
+            s @?= 0,
+        testCase "Should successfully find from map" $ do
+            let storePath3 = storePath ++ "3"
+            f <- evalStateT (do {MS.addOrUpdate idt1 r1 storePath3; MS.addOrUpdate idt2 r2 storePath3; MS.exist idt1}) MS.dictionary
+            removeFile storePath3
+            f @?= True,
+        testCase "Should test many repos marked" $ do
+            let storePath4 = storePath ++ "4"
+            f <- evalStateT (do {MS.addOrUpdate idt1 r1 storePath4; MS.existMany [idt1, idt2]}) MS.dictionary 
+            removeFile storePath4
+            f @?= [True, False],
+        testCase "Should init from empty directory" $ do
+            let storePath5 = storePath ++ "5"
+            f <- evalStateT (do {MS.init storePath5; MS.mapSize}) MS.dictionary 
+            removeFile storePath5
+            f @?= 0,
+        testCase "Should successfully load from existing bookmark file" $ do
+            f1 <- evalStateT (do {MS.init storePath; MS.mapSize}) MS.dictionary
+            unless (f1==2) $ assertFailure "Failed to load one or some tuples in file"
+            f2 <- evalStateT (do {MS.init storePath; MS.exist idt1}) MS.dictionary
+            unless f2 $ assertFailure ("line1" ++ line1 ++ "is not in filter result")
+            f3 <- evalStateT (do {MS.init storePath; MS.exist idt2}) MS.dictionary
+            unless f2 $ assertFailure ("line2" ++ line2 ++ "is not in filter result")
     ]
 
 
 storageTest :: TestTree
-storageTest = testGroup "Storage Test" [storageFileParsingTest, mapTest]
+storageTest = testGroup "Storage Test" [storageFileParsingTest, fileTest]
