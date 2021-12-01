@@ -82,6 +82,7 @@ test-suite github-trending-test
   main-is: Spec.hs
   other-modules:
       Data
+      Storage
       Paths_github_trending
   hs-source-dirs:
       test
