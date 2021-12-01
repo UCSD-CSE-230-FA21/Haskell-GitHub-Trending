@@ -24,19 +24,29 @@ data Record = Record {
 dictionary :: Map.Map String Record
 dictionary = Map.empty
 
-addOrUpdate :: String -> Record -> FilePath -> State (Map.Map String Record) ()
+addOrUpdate :: D.RepositoryIdentifier -> Record -> FilePath -> State (Map.Map String Record) ()
 addOrUpdate idt r fp = do
+    let key = extractId idt
     dict <- get
-    let newDict = Map.insert idt r dict
+    let newDict = Map.insert key r dict
     let _ =  writeBookMark fp newDict
     put newDict
 
-delete :: String -> FilePath -> State (Map.Map String Record) ()
+delete :: D.RepositoryIdentifier -> FilePath -> State (Map.Map String Record) ()
 delete idt fp = do
+    let key = extractId idt
     dict <- get
-    let newDict = Map.delete idt dict
+    let newDict = Map.delete key dict
     let _ = writeBookMark fp newDict
     put newDict
+
+exist :: D.RepositoryIdentifier -> State (Map.Map String Record) Bool
+exist idt = do
+    let key = extractId idt
+    dict <- get
+    case Map.lookup key dict of
+        Nothing -> return False
+        Just _ -> return True
 
 extractId :: D.RepositoryIdentifier -> String
 extractId idt = D.ridOwner idt ++ "," ++ D.ridName idt
