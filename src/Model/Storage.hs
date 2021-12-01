@@ -28,10 +28,6 @@ type MyMap = Map.Map String Record
 dictionary :: MyMap
 dictionary = Map.empty
 
-dictionary2 :: MyMap
-dictionary2 = fromList [("a-2,b2", r1), ("a1,b-1", r2)]
-
-
 addOrUpdate :: (MonadState MyMap m, MonadIO m) => D.RepositoryIdentifier -> Record -> FilePath -> m()
 addOrUpdate idt r fp = do
     let key = extractId idt
@@ -85,15 +81,6 @@ mapSize :: (MonadState MyMap m, MonadIO m) => m Int
 mapSize = do
     gets Map.size
 
-idt1 = D.RepositoryIdentifier "a1" "b-1"
-idt2 = D.RepositoryIdentifier "a-2" "b2"
-day = parseTimeOrError True defaultTimeLocale "%Y-%m-%d" "1996-11-08"
-r1 = Record idt1 day
-r2 = Record idt2 day
--- >>> flip evalStateT dictionary $ do {init defaultPath; delete idt2 defaultPath}
--- fromList [("a-2,b2",Record {idt = RepositoryIdentifier {ridOwner = "a-2", ridName = "b2"}, updateTime = 1996-11-08}),("a1,b-1",Record {idt = RepositoryIdentifier {ridOwner = "a1", ridName = "b-1"}, updateTime = 1996-11-08})]
-
--- >>> writeBookMark defaultPath dictionary2
 
 
 defaultPath :: String

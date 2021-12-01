@@ -13,9 +13,11 @@ import Data.Time (parseTimeOrError)
 import Data.Time.Format (defaultTimeLocale)
 import System.Directory
 import qualified Model.Storage as MS
+import qualified Bookmark as B
 
 idt1 = MD.RepositoryIdentifier "a1" "b-1"
 idt2 = MD.RepositoryIdentifier "a-2" "b2"
+idt3 = MD.RepositoryIdentifier "a3" "b3"
 day = parseTimeOrError True defaultTimeLocale "%Y-%m-%d" "1996-11-08"
 r1 = MS.Record idt1 day
 r2 = MS.Record idt2 day
@@ -84,13 +86,53 @@ fileTest = testGroup "Testing IO operations"
                 Nothing -> assertFailure ("Could not find out specific date of idt1: " ++ show idt1)
                 Just d -> assertEqual ("Wrong date picked up: " ++ show d ++ " expected: " ++ show day) d day,
         testCase "Should return Nothing when query non-existing repo" $ do
-            let idt3 = MD.RepositoryIdentifier "a3" "b3"
             f1 <- evalStateT (do {MS.init storePath; MS.pickUpDate idt3}) MS.dictionary
             case f1 of
-                Nothing -> assertEqual "DUMMY" f1 f1
+                Nothing -> return ()
                 Just _ -> assertFailure ("Should not find out specific date of idt3: " ++ show idt3)
     ]
 
 
+serviceTest :: TestTree
+serviceTest = testGroup "Testing service functions"
+    [
+        testCase "Should successfully perform batch query" $ do
+            res <- B.batchQuery [idt1, idt2, idt3] storePath
+            res @?= [True, True, False],
+        testCase "Should successfully perform single query" $ do
+            res <- B.singleQuery idt1 storePath
+            res @?= True,
+        testCase "Should successfully perform date query" $ do
+            res <- B.dateQuery idt1 storePath
+            case res of 
+                Nothing -> assertFailure ("Could not pick up date for idt1: " ++ show idt1)
+                Just d -> assertEqual ("Wrong date for idt1, actual: " ++ show d ++ " expected: " ++ show day) d day,
+        testCase "Should successfully add a new bookmark and update an old one" $ do
+            let storePath6 = storePath ++ "6"
+            size1 <- B.addBookMark idt1 storePath6
+            case size1 of
+                1 -> return ()
+                _ -> assertFailure ("Wrong map size, expected 1, got " ++ show size1)
+            size2 <- B.addBookMark idt1 storePath6
+            case size2 of
+                1 -> return ()
+                _ -> assertFailure ("Wrong map size, expected 1, got " ++ show size2)
+            removeFile storePath6,
+        testCase "Should successfully delete an existing bookmark and not a non-existing one" $ do
+            let storePath7 = storePath ++ "7"
+            B.addBookMark idt1 storePath7
+            B.addBookMark idt2 storePath7
+            size1 <- B.delBookMark idt1 storePath7
+            case size1 of
+                1 -> return ()
+                _ -> assertFailure ("Wrong map size, expected 1, got " ++ show size1)
+            size2 <- B.delBookMark idt1 storePath7
+            case size2 of
+                1 -> return ()
+                _ -> assertFailure ("Wrong map size, expected 1, got " ++ show size2)
+            removeFile storePath7               
+    ]
+
+
 storageTest :: TestTree
-storageTest = testGroup "Storage Test" [storageFileParsingTest, fileTest]
+storageTest = testGroup "Storage Test" [storageFileParsingTest, fileTest, serviceTest]
