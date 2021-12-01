@@ -5,13 +5,16 @@
 module Model.Storage where
 
 import           Control.Monad.State
-import           Data.Time(Day)
+import           Data.Time(Day, defaultTimeLocale, formatTime, parseTimeOrError)
+import           System.IO
+import           System.Directory
+import           Text.Parsec hiding (State)
+import           Text.Parsec.String
 import qualified Data.Map.Strict as Map
-
 import qualified Model.Data as D
 
 data Record = Record {
-    id :: D.RepositoryIdentifier,
+    idt :: D.RepositoryIdentifier,
     updateTime :: Day
 } deriving (Show, Eq)
 
@@ -21,19 +24,86 @@ data Record = Record {
 dictionary :: Map.Map String Record
 dictionary = Map.empty
 
-addOrUpdate :: String -> Record -> State (Map.Map String Record) ()
-addOrUpdate id r = do
+addOrUpdate :: String -> Record -> FilePath -> State (Map.Map String Record) ()
+addOrUpdate idt r fp = do
     dict <- get
-    put (Map.insert id r dict)
+    let newDict = Map.insert idt r dict
+    let _ =  writeBookMark fp newDict
+    put newDict
 
-delete :: String -> State (Map.Map String Record) ()
-delete id = do
+delete :: String -> FilePath -> State (Map.Map String Record) ()
+delete idt fp = do
     dict <- get
-    put (Map.delete id dict)
+    let newDict = Map.delete idt dict
+    let _ = writeBookMark fp newDict
+    put newDict
 
 extractId :: D.RepositoryIdentifier -> String
-extractId id = D.ridOwner id ++ " " ++ D.ridName id
+extractId idt = D.ridOwner idt ++ "," ++ D.ridName idt
+
+extractIdFromRecord :: Record -> String
+extractIdFromRecord r = extractId (idt r)
 
 generateFromId :: String -> String -> D.RepositoryIdentifier
 generateFromId = D.RepositoryIdentifier
 
+
+
+defaultPath :: String
+defaultPath = "storage/store"
+
+parseFromString :: Parser a -> String -> Either ParseError a
+parseFromString p = runParser p () "DUMMY"
+
+sepParser :: Parser Char
+sepParser = noneOf ",\r\n"
+
+parseLine :: Parser Record
+parseLine = do
+    skipMany space
+    owner <- many1 sepParser
+    skipMany space
+    string ","
+    skipMany space
+    repo <- many1 sepParser
+    skipMany space
+    string ","
+    skipMany space
+    date <- many1 sepParser
+
+    let idt = D.RepositoryIdentifier owner repo
+    let time = parseTimeOrError True defaultTimeLocale "%Y-%m-%d" date
+    return (Record idt time)
+
+-- The input should be like "prefix,suffix,yyyy-mm-dd"
+init :: FilePath -> StateT (Map.Map String Record) IO ()
+init fp = do
+    ls <- lift (loadBookMark fp)
+    mapM_ fillIn ls
+    lift (putStrLn "init finished")
+
+fillIn :: String -> StateT (Map.Map String Record) IO ()
+fillIn line = do
+    dict <- get
+    case parseFromString parseLine line of
+        Left err -> put dict    -- parse error
+        Right r -> put (Map.insert "s" r dict)
+
+loadBookMark :: FilePath -> IO [String]
+loadBookMark fp = do
+    exist <- doesFileExist fp
+    unless exist $ writeFile fp ""
+    contents <- readFile fp
+    let linesOfFile = lines contents
+    return linesOfFile
+
+writeBookMark :: FilePath -> Map.Map String Record -> IO ()
+writeBookMark fp dict = do
+    writeFile fp ""
+    mapM_ writeLine (Map.toList dict)
+    where
+        writeLine (_, v) = do
+            let idt = extractIdFromRecord v
+            let date = formatTime defaultTimeLocale "%Y-%m-%d" (updateTime v)
+            let line = idt ++ "," ++ line ++ "\r\n"
+            appendFile fp line
