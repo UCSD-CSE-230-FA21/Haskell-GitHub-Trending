@@ -64,6 +64,14 @@ existMany (idt:idts) = do
     others <- existMany idts
     return (mark : others)
 
+pickUpDate :: (MonadState MyMap m, MonadIO m) => D.RepositoryIdentifier -> m (Maybe Day)
+pickUpDate idt = do
+    let key = extractId idt
+    dict <- get
+    case Map.lookup key dict of
+        Nothing -> return Nothing
+        Just r -> return (Just (updateTime r))
+
 extractId :: D.RepositoryIdentifier -> String
 extractId idt = D.ridOwner idt ++ "," ++ D.ridName idt
 
