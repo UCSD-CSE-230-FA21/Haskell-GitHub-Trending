@@ -36,7 +36,6 @@ parseReadmeTest = testGroup "parseReadmeTest"
       @?= False
   ]
 
--- #FIXME add more JSON Unit test
 
 dataTest :: TestTree
 dataTest = testGroup "Data Test" [base64DecodeTest, parseReadmeTest]
