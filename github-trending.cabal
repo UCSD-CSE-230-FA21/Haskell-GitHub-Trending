@@ -32,6 +32,10 @@ library
       Model.Storage
       Network
       Bookmark
+      View.Trending
+      View.Readme
+      View.Filter
+      View.State
   other-modules:
       Paths_github_trending
   hs-source-dirs:
@@ -53,6 +57,10 @@ library
     , mtl
     , directory
     , parsec
+    , microlens
+    ,microlens-th
+    ,vty
+    ,vector
   default-language: Haskell2010
 
 executable github-trending-exe
@@ -76,6 +84,7 @@ executable github-trending-exe
     , text
     , time
     , utf8-string
+    , microlens-th
   default-language: Haskell2010
 
 test-suite github-trending-test
@@ -104,4 +113,5 @@ test-suite github-trending-test
     , utf8-string
     , mtl
     , directory
+    , microlens-th
   default-language: Haskell2010

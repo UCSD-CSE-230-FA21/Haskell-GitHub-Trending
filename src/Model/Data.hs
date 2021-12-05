@@ -38,7 +38,11 @@ data Repository = Repository {
   fork :: Int,
   watcher :: Int,
   rLanguage :: String
-} deriving (Show, Eq, Generic)
+} deriving (Eq, Generic)
+
+instance Show Repository where
+  show  (Repository (RepositoryIdentifier owner name) description star fork watcher rLanguage) =  show owner ++ "\t" ++ show name ++ "\t" ++ show description ++ "\t" ++ show star ++ "\t" ++ show fork ++ "\t" ++ show watcher ++ "\t" ++ show rLanguage
+ 
 
 data Readme = Readme {
   rContent :: String,
