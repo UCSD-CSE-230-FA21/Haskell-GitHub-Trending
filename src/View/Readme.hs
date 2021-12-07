@@ -55,7 +55,11 @@ appEvent l _ = M.continue l
 
 
 drawReadme :: VS.AppState -> [Widget ()]
-drawReadme l = [ui]
+drawReadme (VS.AppState l r q) = [ui]
+    where
+        text = str (show r)
+        ui = C.vCenter $ vBox [ C.hCenter text]
+
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"

@@ -89,9 +89,10 @@ appEvent s@(VS.AppState l r q) (T.VtyEvent e) =
         V.EvKey V.KEnter [] -> 
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
-                Just i ->
-                    -- Todo: Get Corresponding Readme into s 
-                    M.suspendAndResume $ M.defaultMain VR.theApp s
+                Just i -> do
+                    -- Todo: Get Corresponding Readme into s
+                    state <- liftIO $ VS.getAppState q (l^.L.listElementsL)  -- to d: construct a new AppState
+                    M.suspendAndResume $ M.defaultMain VR.theApp state
 
         ev -> M.continue =<< handleTrendingList ev s
 appEvent s _ = M.continue s
