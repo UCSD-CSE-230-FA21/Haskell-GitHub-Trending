@@ -97,6 +97,12 @@ decodeBase64 str =
     Left err -> Left err
     Right msg -> Right $ B.unpack msg 
 
+addPadding s = 
+  case (length s) `mod` 4 of
+    2 -> s ++ "=="
+    3 -> s ++ "="
+    _ -> s
+
 convertReadmeContent :: Readme -> Either String String
 convertReadmeContent rd = 
   let 
@@ -104,5 +110,5 @@ convertReadmeContent rd =
     content = rContent rd;
   in 
     case encode of
-      "base64" -> decodeBase64 content
+      "base64" -> decodeBase64 (addPadding content)
       otherwise -> Left $ "Unsupported Encoding: " ++ encode

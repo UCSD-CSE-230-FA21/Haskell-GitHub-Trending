@@ -90,8 +90,7 @@ appEvent s@(VS.AppState l r q) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do
-                    -- Todo: Get Corresponding Readme into s
-                    state <- liftIO $ VS.getAppState q (l^.L.listElementsL)  -- to d: construct a new AppState
+                    state <- liftIO $ VS.getAppState q (Just (MD.identifier ((l^.L.listElementsL) Vec.! i)) ) 
                     M.suspendAndResume $ M.defaultMain VR.theApp state
 
         ev -> M.continue =<< handleTrendingList ev s
