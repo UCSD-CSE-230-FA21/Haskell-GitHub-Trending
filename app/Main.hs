@@ -21,8 +21,10 @@ main = simpleMain version
 readme :: IO ()
 readme = 
   let 
+    -- author = "mayuur";
+    -- repo = "MJParallaxCollectionView"; -- change to something else and see error
     author = "octocat";
-    repo = "hello-world"; -- change to something else and see error
+    repo = "hello-world";
   in do
     r <- try $ N.getReadmeRequest $ D.RepositoryIdentifier author repo :: IO (Either SomeException D.Readme)
     case r of
@@ -30,9 +32,7 @@ readme =
         Right rd -> print $ show $ D.convertReadmeContent rd
 
 -- >>> trending
--- "TrendingResponse {totalCount = 39797288, repos = 
---    [Repository {identifier = RepositoryIdentifier {ridOwner = \"apneadiving\", ridName = \"Google-Maps-for-Rails\"}, 
---                  description = \"Enables easy Google map + overlays creation in Ruby apps\", star = 2285, fork = 404, watcher = 2285, rLanguage = \"JavaScript\"}]}"
+-- "TrendingResponse {totalCount = 42434232, repos = [\"apneadiving\"\t\"Google-Maps-for-Rails\"\t\"Enables easy Google map + overlays creation in Ruby apps\"\t2285\t404\t2285\t\"JavaScript\"]}"
 --
 trending :: IO ()
 trending = 

@@ -36,7 +36,7 @@ import qualified Brick.Main as M
 import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 
 import qualified View.Readme as VR
-import qualified View.Filter as VF
+-- import qualified View.Filter as VF
 import qualified View.State as VS
 --drawUI :: (Show a) => L.List () a -> [Widget ()]
 --drawUI l = [ui]

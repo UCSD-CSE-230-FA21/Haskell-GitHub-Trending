@@ -1,4 +1,4 @@
--- Todo: Filter based ont the dialog example  
+-- Todo: Filter based on the dialog example  
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -7,6 +7,9 @@ module View.Filter where
 
 import Lens.Micro
 import Lens.Micro.TH
+import Data.Char (isSpace)
+import Data.Time.Clock (getCurrentTime, utctDay)
+import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -24,6 +27,9 @@ import qualified Brick.AttrMap as A
 import qualified Brick.Focus as F
 import Brick.Util (on)
 
+import qualified View.Trending as VT
+import qualified View.State as VS
+import qualified Model.Data as MD
 data Name = Edit1
           | Edit2
           deriving (Ord, Show, Eq)
@@ -52,7 +58,15 @@ drawUI st = [ui]
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.VtyEvent ev) =
     case ev of
-        V.EvKey V.KEsc [] -> M.halt st
+        V.EvKey V.KEsc [] -> do
+            let s1 = unlines $ E.getEditContents $ st^.edit1
+                s2 = unlines $ E.getEditContents $ st^.edit2
+                lang = if all isSpace s1 then "*" else s1
+                page = if all isSpace s2 then 1 else (read s2)
+            today <- liftIO $ utctDay <$> getCurrentTime
+            state <- liftIO $ VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
+            M.suspendAndResume $ M.defaultMain VT.theApp state
+            
         V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
         V.EvKey V.KBackTab [] -> M.continue $ st & focusRing %~ F.focusPrev
 
