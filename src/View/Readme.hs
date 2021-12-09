@@ -47,6 +47,7 @@ appEvent :: VS.AppState -> T.BrickEvent () e -> T.EventM () (T.Next VS.AppState)
 appEvent l (T.VtyEvent e) =
     case e of
         V.EvKey V.KEsc [] -> M.halt l
+        _ -> M.continue l
 appEvent l _ = M.continue l
 
 
