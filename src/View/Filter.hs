@@ -99,8 +99,8 @@ trim :: String -> String
 trim = f . f
    where f = reverse . dropWhile isSpace
 
-parseDay :: String -> Day
-parseDay s = DTF.parseTimeOrError True DTF.defaultTimeLocale "%Y-%-m-%-d" s
+parseDay :: String -> Maybe Day
+parseDay s = DTF.parseTimeM True DTF.defaultTimeLocale "%Y-%-m-%-d" s
 
 ----------------------------- helper functions -----------------------------
 

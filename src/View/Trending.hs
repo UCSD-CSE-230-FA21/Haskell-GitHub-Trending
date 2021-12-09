@@ -51,6 +51,7 @@ import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 import qualified View.Readme as VR
 import qualified View.Filter as VF
 import qualified View.State as VS
+import Text.Read (readMaybe)
 
 
 drawTrending :: VS.AppState -> [Widget ()]
@@ -92,9 +93,11 @@ appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
                 s3 = unlines $ E.getEditContents $ st^.VF.edit3
                 s4 = unlines $ E.getEditContents $ st^.VF.edit4
                 lan = if all isSpace s1 then "*" else (VF.trim s1)
-                dat = if all isSpace s2 then today else (VF.parseDay $ VF.trim s2)
-                pag = if all isSpace s3 then 1 else (read s3::Int)
-                per = if all isSpace s4 then 10 else (read s4::Int)
+                dat = fromMaybe today (VF.parseDay $ VF.trim s2)
+                pag' = fromMaybe 1 (readMaybe s3)
+                per' = fromMaybe 10 (readMaybe s4)
+                pag = if pag'<0 || pag'>50 then 1 else pag'
+                per = if per'<0 || per'>100 then 10 else per'
             newState <- liftIO $ VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
             M.continue newState
     -- M.suspendAndResume $ M.defaultMain VF.theApp VF.initialState
