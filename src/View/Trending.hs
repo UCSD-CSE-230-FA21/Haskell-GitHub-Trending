@@ -43,6 +43,7 @@ import qualified Data.List as DL
 import qualified Model.Lib as ML
 import qualified Network as MN
 import qualified Model.Data as MD
+import qualified Model.Storage as MS
 import qualified Bookmark as B
 import qualified Brick.Main as M
 import Control.Monad.RWS.Lazy (MonadIO(liftIO))
@@ -110,7 +111,7 @@ appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
-                    _ <- liftIO $ B.addBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  "../../storage/test"        
+                    _ <- liftIO $ B.addBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  MS.defaultPath         
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
@@ -118,7 +119,7 @@ appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
-                    _ <- liftIO $ B.delBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  "../../storage/test"        
+                    _ <- liftIO $ B.delBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  MS.defaultPath        
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
