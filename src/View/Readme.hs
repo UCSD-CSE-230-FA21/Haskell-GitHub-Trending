@@ -58,8 +58,7 @@ drawReadme :: VS.AppState -> [Widget ()]
 drawReadme (VS.AppState l r q) = [ui]
     where
         text = str (show $ MD.convertReadmeContent r)
-        text2 = str (show r)
-        ui = C.vCenter $ vBox [C.hCenter text2]
+        ui = C.vCenter $ vBox [C.hCenter text]
 
 
 customAttr :: A.AttrName

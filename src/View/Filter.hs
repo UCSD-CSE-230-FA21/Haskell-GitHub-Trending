@@ -43,6 +43,10 @@ data St =
 
 makeLenses ''St
 
+trim :: String -> String
+trim = f . f
+   where f = reverse . dropWhile isSpace
+
 drawUI :: St -> [T.Widget Name]
 drawUI st = [ui]
     where
@@ -109,7 +113,12 @@ main = do
     let
         s1 = unlines $ E.getEditContents $ st^.edit1
         s2 = unlines $ E.getEditContents $ st^.edit2
-        lang = if all isSpace s1 then "*" else s1
-        page = if all isSpace s2 then 1 else (read s2)
+        lang = if all isSpace s1 then "*" else ( trim s1)
+        page = if all isSpace s2 then 1 else (read s2::Int)
+    -- putStrLn $ show page
     as <- VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
+    -- putStrLn $ show $ VS.query as
+    -- putStrLn lang
+    
+
     void $ M.defaultMain VT.theApp as
