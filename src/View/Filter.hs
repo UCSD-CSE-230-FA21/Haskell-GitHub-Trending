@@ -10,6 +10,7 @@ import Lens.Micro.TH
 import Data.Char (isSpace)
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Control.Monad.RWS.Lazy (MonadIO(liftIO))
+import Control.Monad (void)
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -58,14 +59,15 @@ drawUI st = [ui]
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.VtyEvent ev) =
     case ev of
-        V.EvKey V.KEsc [] -> do
-            let s1 = unlines $ E.getEditContents $ st^.edit1
-                s2 = unlines $ E.getEditContents $ st^.edit2
-                lang = if all isSpace s1 then "*" else s1
-                page = if all isSpace s2 then 1 else (read s2)
-            today <- liftIO $ utctDay <$> getCurrentTime
-            state <- liftIO $ VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
-            M.suspendAndResume $ M.defaultMain VT.theApp state
+        V.EvKey V.KEsc [] ->  M.halt st
+            -- do
+            -- let s1 = unlines $ E.getEditContents $ st^.edit1
+            --     s2 = unlines $ E.getEditContents $ st^.edit2
+            --     lang = if all isSpace s1 then "*" else s1
+            --     page = if all isSpace s2 then 1 else (read s2)
+            -- today <- liftIO $ utctDay <$> getCurrentTime
+            -- state <- liftIO $ VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
+            -- M.suspendAndResume $ M.defaultMain VT.theApp state
             
         V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
         V.EvKey V.KBackTab [] -> M.continue $ st & focusRing %~ F.focusPrev
@@ -103,7 +105,11 @@ theApp =
 main :: IO ()
 main = do
     st <- M.defaultMain theApp initialState
-    putStrLn "In input 1 you entered:\n"
-    putStrLn $ unlines $ E.getEditContents $ st^.edit1
-    putStrLn "In input 2 you entered:\n"
-    putStrLn $ unlines $ E.getEditContents $ st^.edit2
+    today <- utctDay <$> getCurrentTime
+    let
+        s1 = unlines $ E.getEditContents $ st^.edit1
+        s2 = unlines $ E.getEditContents $ st^.edit2
+        lang = if all isSpace s1 then "*" else s1
+        page = if all isSpace s2 then 1 else (read s2)
+    as <- VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
+    void $ M.defaultMain VT.theApp as
