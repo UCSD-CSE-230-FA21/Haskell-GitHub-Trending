@@ -5,14 +5,16 @@ import qualified Data.Vector as Vec
 
 import qualified Model.Data as MD
 import qualified Network as MN
-
+import qualified Bookmark as MB
 
 import Data.Time.Clock (getCurrentTime, utctDay)
+import Lens.Micro ((^.))
 
 data AppState = AppState {
     trending::(L.List () MD.Repository),
     readme::MD.Readme,
-    query::MD.TrendingQuery
+    query::MD.TrendingQuery,
+    bookmark::[Bool]
 }
 
 
@@ -21,8 +23,20 @@ getAppState q (Just id) =
     do
         MD.TrendingResponse i rs <-  MN.getTrendingRequest q
         rm <-  MN.getReadmeRequest id
-        return $  AppState  (L.list () (Vec.fromList rs) 1) rm q 
+        bm <- MB.batchQuery (getIds rs) "../../storage/test"  
+        return $  AppState  (L.list () (Vec.fromList rs) 1) rm q bm
 getAppState q Nothing =
     do
         MD.TrendingResponse i rs <-  MN.getTrendingRequest q
-        return $  AppState  (L.list () (Vec.fromList rs) 1) (MD.Readme "empty"  "empty")  q 
+        bm <- MB.batchQuery (getIds rs) "../../storage/test"  
+        return $  AppState  (L.list () (Vec.fromList rs) 1) (MD.Readme "empty"  "empty") q bm
+        
+updateBookmark :: AppState -> IO (AppState)
+updateBookmark (AppState tr rm q _) = do
+        bm <- MB.batchQuery (getIds (Vec.toList (tr^.L.listElementsL))) "../../storage/test"
+        return $  AppState tr rm q bm
+
+getIds :: [MD.Repository] -> [MD.RepositoryIdentifier]
+getIds rs = map getId rs
+    where
+        getId (MD.Repository id _ _ _ _ _) = id

@@ -55,7 +55,7 @@ appEvent l _ = M.continue l
 
 
 drawReadme :: VS.AppState -> [Widget ()]
-drawReadme (VS.AppState l r q) = [ui]
+drawReadme (VS.AppState l r q _) = [ui]
     where
         text = str (show $ MD.convertReadmeContent r)
         text2 = str (show r)

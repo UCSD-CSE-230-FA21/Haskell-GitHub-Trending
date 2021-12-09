@@ -46,15 +46,21 @@ drawUI l = [ui]
                 Nothing -> str "-"
                 Just i -> str (show (i + 1))
         total = str $ show $ Vec.length $ l^.L.listElementsL
-        box = B.borderWithLabel label $
+        box1 = B.borderWithLabel label $
               hLimit 205 $
               vLimit 15 $
               L.renderList listDrawElement True l
-        ui = C.vCenter $ vBox [ C.hCenter box
-                              , str " "
-                              , C.hCenter $ str "Press +/- to add/remove list elements."
-                              , C.hCenter $ str "Press Esc to exit."
-                              ]
+        box2 = .borderWithLabel label $
+              hLimit 205 $
+              vLimit 15 $
+              L.renderList listDrawElement True l
+        ui = borderWithLabel (str "Hello!") $
+            (center (str "Left") <+> vBorder <+> center (str "Right"))
+        --ui = C.vCenter $ vBox [ C.hCenter box
+        --                      , str " "
+        --                      , C.hCenter $ str "Press +/- to add/remove list elements."
+        --                      , C.hCenter $ str "Press Esc to exit."
+        --                      ]
 
 appEvent :: L.List () MD.Repository -> T.BrickEvent () e -> T.EventM () (T.Next (L.List () MD.Repository))
 appEvent l (T.VtyEvent e) =
