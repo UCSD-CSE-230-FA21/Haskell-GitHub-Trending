@@ -27,7 +27,7 @@ import qualified Brick.AttrMap as A
 import qualified Brick.Focus as F
 import Brick.Util (on)
 
-import qualified View.Trending as VT
+-- import qualified View.Trending as VT
 import qualified View.State as VS
 import qualified Model.Data as MD
 data Name = Edit1
@@ -69,15 +69,6 @@ appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] ->  M.halt st
-            -- do
-            -- let s1 = unlines $ E.getEditContents $ st^.edit1
-            --     s2 = unlines $ E.getEditContents $ st^.edit2
-            --     lang = if all isSpace s1 then "*" else s1
-            --     page = if all isSpace s2 then 1 else (read s2)
-            -- today <- liftIO $ utctDay <$> getCurrentTime
-            -- state <- liftIO $ VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
-            -- M.suspendAndResume $ M.defaultMain VT.theApp state
-            
         V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
         V.EvKey V.KBackTab [] -> M.continue $ st & focusRing %~ F.focusPrev
 
@@ -89,13 +80,6 @@ appEvent st (T.VtyEvent ev) =
                Nothing -> return st
 appEvent st _ = M.continue st
 
-initialState :: St
-initialState =
-    St (F.focusRing [Edit1, Edit2, Edit3, Edit4])
-       (E.editor Edit1 (Just 1) "")
-       (E.editor Edit2 (Just 1) "")
-       (E.editor Edit3 (Just 1) "")
-       (E.editor Edit4 (Just 1) "")
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
@@ -106,14 +90,7 @@ theMap = A.attrMap V.defAttr
 appCursor :: St -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor = F.focusRingCursor (^.focusRing)
 
-theApp :: M.App St e Name
-theApp =
-    M.App { M.appDraw = drawUI
-          , M.appChooseCursor = appCursor
-          , M.appHandleEvent = appEvent
-          , M.appStartEvent = return
-          , M.appAttrMap = const theMap
-          }
+
 
 
 ----------------------------- helper functions -----------------------------
@@ -128,18 +105,35 @@ parseDay s = DTF.parseTimeOrError True DTF.defaultTimeLocale "%Y-%-m-%-d" s
 ----------------------------- helper functions -----------------------------
 
 
-main :: IO ()
-main = do
-    st <- M.defaultMain theApp initialState
-    today <- utctDay <$> getCurrentTime
-    let
-        s1 = unlines $ E.getEditContents $ st^.edit1
-        s2 = unlines $ E.getEditContents $ st^.edit2
-        s3 = unlines $ E.getEditContents $ st^.edit3
-        s4 = unlines $ E.getEditContents $ st^.edit4
-        lan = if all isSpace s1 then "*" else (trim s1)
-        dat = if all isSpace s2 then today else (parseDay $ trim s2)
-        pag = if all isSpace s3 then 1 else (read s3::Int)
-        per = if all isSpace s4 then 10 else (read s4::Int)
-    as <- VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
-    void $ M.defaultMain VT.theApp as
+-- main :: IO ()
+-- main = do
+--     st <- M.defaultMain theApp VT.VFinitialState
+--     today <- utctDay <$> getCurrentTime
+--     let
+--         s1 = unlines $ E.getEditContents $ st^.edit1
+--         s2 = unlines $ E.getEditContents $ st^.edit2
+--         s3 = unlines $ E.getEditContents $ st^.edit3
+--         s4 = unlines $ E.getEditContents $ st^.edit4
+--         lan = if all isSpace s1 then "*" else (trim s1)
+--         dat = if all isSpace s2 then today else (parseDay $ trim s2)
+--         pag = if all isSpace s3 then 1 else (read s3::Int)
+--         per = if all isSpace s4 then 10 else (read s4::Int)
+--     as <- VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
+--     void $ M.defaultMain VT.theApp as
+
+
+
+
+            -- do
+            -- today <- liftIO $ utctDay <$> getCurrentTime
+            -- let
+            --     s1 = unlines $ E.getEditContents $ st^.edit1
+            --     s2 = unlines $ E.getEditContents $ st^.edit2
+            --     s3 = unlines $ E.getEditContents $ st^.edit3
+            --     s4 = unlines $ E.getEditContents $ st^.edit4
+            --     lan = if all isSpace s1 then "*" else (trim s1)
+            --     dat = if all isSpace s2 then today else (parseDay $ trim s2)
+            --     pag = if all isSpace s3 then 1 else (read s3::Int)
+            --     per = if all isSpace s4 then 10 else (read s4::Int)
+            -- as <- liftIO $ VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
+            -- M.suspendAndResume $ M.defaultMain VT.theApp as
