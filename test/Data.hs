@@ -11,15 +11,11 @@ import qualified Model.Data as MD
 base64DecodeTest :: TestTree
 base64DecodeTest = testGroup "Testing base64Decode"
   [ testCase "Should decode without issue" $
-      case MD.decodeBase64 "SGVsbG8gV29ybGQhCg==" of
-          Right msg -> msg
-          Left err -> err
+      MD.decodeBase64 "SGVsbG8gV29ybGQhCg=="
     @?= "Hello World!\n" 
-  , testCase "Unable to decode" $ 
-    case MD.decodeBase64 "something not base64" of 
-        Right _ -> True
-        Left _ -> False
-    @?= False
+  , testCase "Multi Line" $
+    MD.convertContent "SGVsbG8gV29ybGQhCg==\nSGVsbG8gV29ybGQhCg=="
+    @?= "Hello World!\nHello World!\n"
   ]
 
 parseReadmeTest :: TestTree
