@@ -47,13 +47,13 @@ getTrendingRequest query =
     lang = "language:" ++ (show (D.tLanguage query));
     day = formatTime defaultTimeLocale "%Y-%m-%d" $ D.sinceDay query;
     since = "created:<" ++ day;
+    qry = lang ++ " " ++ since;
     searchQueries = (
       ("sort" =: ("stars" :: Text))
       <> ("order" =: ("desc" :: Text))
       <> ("per_page") =: (show (D.itemPerPage query))
       <> ("page") =: (show (D.page query))
-      <> ("q" =: lang)
-      <> ("q" =: since));
+      <> ("q" =: qry));
   in
   runReq defaultHttpConfig $ do
     r <-

@@ -5,7 +5,7 @@ import Lens.Micro ((^.))
 import Control.Monad (void)
 
 
-
+import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
 import qualified Graphics.Vty as V
 
@@ -16,6 +16,8 @@ import qualified Brick.Widgets.Center as C
 import  Brick.Widgets.Table
 import qualified Brick.Widgets.Center as WC
 import qualified Brick.AttrMap as A
+import qualified Brick.Focus as F
+import qualified Brick.Widgets.Edit as E
 import qualified Data.Vector as Vec
 import Brick.Types
   ( Widget
@@ -58,7 +60,7 @@ drawTrending (VS.AppState l r q bm) = [ui]
                 Nothing -> str "-"
                 Just i -> str (show (i + 1))
         total = str $ show $ Vec.length $ l^.L.listElementsL
-        box1 = WB.borderWithLabel (str "Press \"Enter\" to see ReadMe , \"s/u\" to add/delete bookmark") $
+        box1 = WB.borderWithLabel (str "Press \"Enter\" to see ReadMe , \"s/d\" to add/delete bookmark") $
               hLimit 70 $
               vLimit 3$
               L.renderList listDrawElement True l
@@ -66,7 +68,7 @@ drawTrending (VS.AppState l r q bm) = [ui]
               hLimit 205 $
               vLimit 50 $
               drawTable l bm
-        ui = C.hCenter $ vBox [ box1, box2, str "Press \"Esc\" to exit, \"f\" to refresh" ]   
+        ui = C.hCenter $ vBox [ box1, box2, str "Press \"Esc\" to exit, \"u\" to refresh, \"f\" to set filter" ]   
     --    ui = C.vCenter $ vBox [ C.hCenter box
     --                          , str " "
     --                         , C.hCenter $ str "Press Enter to see ReadMe"
@@ -80,7 +82,21 @@ appEvent :: VS.AppState -> T.BrickEvent () e -> T.EventM () (T.Next VS.AppState)
 appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
     case e of
         -- Todo: emplement filter
-        --V.EvKey (V.KChar 'f') [] -> M.suspendAndResume $ M.defaultMain VF.theApp s
+        V.EvKey (V.KChar 'f') [] -> do
+            st <- liftIO $ M.defaultMain theVFApp initialState
+            today <- liftIO $ utctDay <$> getCurrentTime
+            let
+                s1 = unlines $ E.getEditContents $ st^.VF.edit1
+                s2 = unlines $ E.getEditContents $ st^.VF.edit2
+                s3 = unlines $ E.getEditContents $ st^.VF.edit3
+                s4 = unlines $ E.getEditContents $ st^.VF.edit4
+                lan = if all isSpace s1 then "*" else (VF.trim s1)
+                dat = if all isSpace s2 then today else (VF.parseDay $ VF.trim s2)
+                pag = if all isSpace s3 then 1 else (read s3::Int)
+                per = if all isSpace s4 then 10 else (read s4::Int)
+            newState <- liftIO $ VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
+            M.continue newState
+    -- M.suspendAndResume $ M.defaultMain VF.theApp VF.initialState
         V.EvKey V.KEsc [] -> M.halt s
         
         V.EvKey V.KEnter [] -> 
@@ -98,7 +114,7 @@ appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
-        V.EvKey (V.KChar 'u')  [] -> 
+        V.EvKey (V.KChar 'd')  [] -> 
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
@@ -106,7 +122,7 @@ appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
-        V.EvKey (V.KChar 'f') [] -> do
+        V.EvKey (V.KChar 'u') [] -> do
             today <- liftIO $ utctDay <$> getCurrentTime
             state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" today 1 10) Nothing
             M.continue state
@@ -159,6 +175,24 @@ theApp =
           , M.appAttrMap = const theMap
           }
 
+
+theVFApp :: M.App VF.St e VF.Name
+theVFApp =
+    M.App { M.appDraw = VF.drawUI
+          , M.appChooseCursor = VF.appCursor
+          , M.appHandleEvent = VF.appEvent
+          , M.appStartEvent = return
+          , M.appAttrMap = const VF.theMap
+          }
+
+
+initialState :: VF.St
+initialState =
+    VF.St (F.focusRing [VF.Edit1, VF.Edit2, VF.Edit3, VF.Edit4])
+       (E.editor VF.Edit1 (Just 1) "")
+       (E.editor VF.Edit2 (Just 1) "")
+       (E.editor VF.Edit3 (Just 1) "")
+       (E.editor VF.Edit4 (Just 1) "")
 
 main :: IO ()
 main = do

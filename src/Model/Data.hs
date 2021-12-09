@@ -11,6 +11,7 @@ import           Data.Aeson
 import           Data.Aeson.Types
 import qualified Data.ByteString.Base64 as B (decode)
 import qualified Data.ByteString.Char8 as B (pack,unpack)
+import qualified Data.List.Split as S (splitOn)
 import           Data.Char (isSpace)
 import           GHC.Generics
 
@@ -91,18 +92,20 @@ trendingResponseParser obj = do
 rstrip :: String -> String
 rstrip = reverse . dropWhile isSpace . reverse
 
-decodeBase64 :: String -> Either String String
+decodeBase64 :: String -> String
 decodeBase64 str =
   case B.decode (B.pack str) of
-    Left err -> Left err
-    Right msg -> Right $ B.unpack msg 
+    Left err -> error err
+    Right msg -> B.unpack msg 
 
-addPadding s = 
-  case (length s) `mod` 4 of
-    2 -> s ++ "=="
-    3 -> s ++ "="
-    _ -> s
-
+convertContent :: String -> String
+convertContent str = 
+  let 
+    chars = S.splitOn "\n" str;
+    dec = map decodeBase64 chars;
+  in 
+    foldl (++) "" dec
+  
 convertReadmeContent :: Readme -> Either String String
 convertReadmeContent rd = 
   let 
@@ -110,5 +113,5 @@ convertReadmeContent rd =
     content = rContent rd;
   in 
     case encode of
-      "base64" -> decodeBase64 (addPadding content)
+      "base64" -> Right $ convertContent content
       otherwise -> Left $ "Unsupported Encoding: " ++ encode
