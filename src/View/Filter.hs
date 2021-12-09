@@ -1,5 +1,3 @@
--- Todo: Filter based on the dialog example  
-
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
@@ -7,12 +5,13 @@ module View.Filter where
 
 import Lens.Micro
 import Lens.Micro.TH
+import Data.Time (Day)
 import Data.Char (isSpace)
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 import Control.Monad (void)
 import qualified Graphics.Vty as V
-
+import qualified Data.Time.Format as DTF
 import qualified Brick.Main as M
 import qualified Brick.Types as T
 import Brick.Widgets.Core
@@ -33,32 +32,38 @@ import qualified View.State as VS
 import qualified Model.Data as MD
 data Name = Edit1
           | Edit2
+          | Edit3
+          | Edit4
           deriving (Ord, Show, Eq)
 
 data St =
     St { _focusRing :: F.FocusRing Name
        , _edit1 :: E.Editor String Name
        , _edit2 :: E.Editor String Name
+       , _edit3 :: E.Editor String Name
+       , _edit4 :: E.Editor String Name
        }
 
 makeLenses ''St
 
-trim :: String -> String
-trim = f . f
-   where f = reverse . dropWhile isSpace
 
 drawUI :: St -> [T.Widget Name]
 drawUI st = [ui]
     where
         e1 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit1)
         e2 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit2)
-
+        e3 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit3)
+        e4 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit4)
         ui = C.center $
-            (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 e1)) <=>
+            (str "Language:          " <+> (hLimit 30 $ vLimit 5 e1)) <=>
             str " " <=>
-            (str "Input 2 (limited to 2 lines): " <+> (hLimit 30 e2)) <=>
+            (str "Date (yyyy-mm-dd): " <+> (hLimit 30 $ vLimit 5 e2)) <=>
             str " " <=>
-            str "Press Tab to switch between editors, Esc to quit."
+            (str "Page (number):     " <+> (hLimit 30 $ vLimit 5 e3)) <=>
+            str " " <=>
+            (str "PerPage (number):  " <+> (hLimit 30 $ vLimit 5 e4)) <=>
+            str " " <=>
+            str "Press Tab to switch between editors, Esc to confirm."
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.VtyEvent ev) =
@@ -79,14 +84,18 @@ appEvent st (T.VtyEvent ev) =
         _ -> M.continue =<< case F.focusGetCurrent (st^.focusRing) of
                Just Edit1 -> T.handleEventLensed st edit1 E.handleEditorEvent ev
                Just Edit2 -> T.handleEventLensed st edit2 E.handleEditorEvent ev
+               Just Edit3 -> T.handleEventLensed st edit3 E.handleEditorEvent ev
+               Just Edit4 -> T.handleEventLensed st edit4 E.handleEditorEvent ev
                Nothing -> return st
 appEvent st _ = M.continue st
 
 initialState :: St
 initialState =
-    St (F.focusRing [Edit1, Edit2])
-       (E.editor Edit1 Nothing "")
-       (E.editor Edit2 (Just 2) "")
+    St (F.focusRing [Edit1, Edit2, Edit3, Edit4])
+       (E.editor Edit1 (Just 1) "")
+       (E.editor Edit2 (Just 1) "")
+       (E.editor Edit3 (Just 1) "")
+       (E.editor Edit4 (Just 1) "")
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
@@ -106,6 +115,19 @@ theApp =
           , M.appAttrMap = const theMap
           }
 
+
+----------------------------- helper functions -----------------------------
+
+trim :: String -> String
+trim = f . f
+   where f = reverse . dropWhile isSpace
+
+parseDay :: String -> Day
+parseDay s = DTF.parseTimeOrError True DTF.defaultTimeLocale "%Y-%-m-%-d" s
+
+----------------------------- helper functions -----------------------------
+
+
 main :: IO ()
 main = do
     st <- M.defaultMain theApp initialState
@@ -113,12 +135,11 @@ main = do
     let
         s1 = unlines $ E.getEditContents $ st^.edit1
         s2 = unlines $ E.getEditContents $ st^.edit2
-        lang = if all isSpace s1 then "*" else ( trim s1)
-        page = if all isSpace s2 then 1 else (read s2::Int)
-    -- putStrLn $ show page
-    as <- VS.getAppState (MD.TrendingQuery lang today page 10) Nothing
-    -- putStrLn $ show $ VS.query as
-    -- putStrLn lang
-    
-
+        s3 = unlines $ E.getEditContents $ st^.edit3
+        s4 = unlines $ E.getEditContents $ st^.edit4
+        lan = if all isSpace s1 then "*" else (trim s1)
+        dat = if all isSpace s2 then today else (parseDay $ trim s2)
+        pag = if all isSpace s3 then 1 else (read s3::Int)
+        per = if all isSpace s4 then 10 else (read s4::Int)
+    as <- VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
     void $ M.defaultMain VT.theApp as
