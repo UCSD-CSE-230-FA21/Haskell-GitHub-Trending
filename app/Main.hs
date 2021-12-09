@@ -16,15 +16,12 @@ main = simpleMain version
 
 -- The following is for testing/playground 
 -- >>> readme
--- "Right \"Hello World!\\n\""
 --
 readme :: IO ()
 readme = 
   let 
-    -- author = "mayuur";
-    -- repo = "MJParallaxCollectionView"; -- change to something else and see error
-    author = "octocat";
-    repo = "hello-world";
+    author = "diygod";
+    repo = "rsshub"; -- change to something else and see error
   in do
     r <- try $ N.getReadmeRequest $ D.RepositoryIdentifier author repo :: IO (Either SomeException D.Readme)
     case r of
