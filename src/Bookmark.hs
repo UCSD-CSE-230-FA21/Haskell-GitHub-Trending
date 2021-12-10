@@ -28,6 +28,11 @@ singleQuery idt fp = evalStateT (do {S.init fp; S.exist idt}) S.dictionary
 dateQuery :: D.RepositoryIdentifier -> FilePath -> IO (Maybe Day)
 dateQuery idt fp = evalStateT (do {S.init fp; S.pickUpDate idt}) S.dictionary
 
+-- | [Input]: A list of RepositoryIdentifier  (definition in Model.Data), FilePath arg (Could use storePath in Model.Storage)
+-- [Output]:  A list of Maybe Day (Nothing | Just Day), indicating the date when the input repos were marked or Nothing
+batchDateQuery :: [D.RepositoryIdentifier] -> FilePath -> IO [Maybe Day]
+batchDateQuery idt fp = evalStateT (do {S.init fp; S.pickUpMany idt}) S.dictionary
+
 -- | [Input]: One single RepositoryIdentifier (definition in Model.Data), FilePath arg (Could use storePath in Model.Storage)
 -- [Output]: The size of current bookmark map
 addBookMark :: D.RepositoryIdentifier -> FilePath -> IO Int

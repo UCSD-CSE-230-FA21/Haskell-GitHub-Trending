@@ -68,6 +68,17 @@ pickUpDate idt = do
         Nothing -> return Nothing
         Just r -> return (Just (updateTime r))
 
+pickUpMany :: (MonadState MyMap m, MonadIO m) => [D.RepositoryIdentifier] -> m [Maybe Day]
+pickUpMany [] = do
+    return []
+pickUpMany (idt:idts) = do
+    let key = extractId idt
+    dict <- get
+    others <- pickUpMany idts
+    case Map.lookup key dict of
+        Nothing -> return (Nothing:others)
+        Just r -> return ((Just (updateTime r)):others)
+
 extractId :: D.RepositoryIdentifier -> String
 extractId idt = D.ridOwner idt ++ "," ++ D.ridName idt
 
