@@ -52,7 +52,7 @@ appEvent l _ = M.continue l
 
 
 drawReadme :: VS.AppState -> [Widget ()]
-drawReadme (VS.AppState l r q _) = [ui]
+drawReadme (VS.AppState l r q _ _) = [ui]
     where
         label = str "README.md"
         Just text = T.stripPrefix (T.pack "Right ") $ T.pack $ show $ MD.convertReadmeContent r
