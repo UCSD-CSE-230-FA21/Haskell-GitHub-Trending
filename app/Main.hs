@@ -3,23 +3,42 @@ module Main where
 import qualified Model.Lib as L
 import qualified Model.Data as D
 import qualified Network as N
+import qualified View.State as VS
+import qualified View.Trending as VT
+import qualified View.Filter as VF
+import qualified Model.Data as MD
+import qualified Brick.Main as M
 import Control.Exception
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Brick
+import Prelude hiding (repeat)
+import Data.Maybe (fromMaybe)
+import View.Filter (parseDay)
+import qualified Control.Monad
 
 version :: Widget ()
 version = str L.version
 
+repeat :: IO ()
+repeat= do
+  q <- VF.startFilter
+  currentState <- VT.startTrending q
+  Control.Monad.unless (VS.shouldExit currentState) repeat
+
 main :: IO ()
-main = simpleMain version
+main = do
+  today <- utctDay <$> getCurrentTime
+  let dat = fromMaybe today (parseDay "2010-1-1")
+  currentState <- VT.startTrending (MD.TrendingQuery "*" dat 1 10)
+  Control.Monad.unless (VS.shouldExit currentState) repeat
 
 
 -- The following is for testing/playground 
 -- >>> readme
 --
 readme :: IO ()
-readme = 
-  let 
+readme =
+  let
     author = "diygod";
     repo = "rsshub"; -- change to something else and see error
   in do
@@ -29,13 +48,11 @@ readme =
         Right rd -> print $ show $ D.convertReadmeContent rd
 
 -- >>> trending
--- "TrendingResponse {totalCount = 39797288, repos = 
---    [Repository {identifier = RepositoryIdentifier {ridOwner = \"apneadiving\", ridName = \"Google-Maps-for-Rails\"}, 
---                  description = \"Enables easy Google map + overlays creation in Ruby apps\", star = 2285, fork = 404, watcher = 2285, rLanguage = \"JavaScript\"}]}"
+-- "TrendingResponse {totalCount = 42434232, repos = [\"apneadiving\"\t\"Google-Maps-for-Rails\"\t\"Enables easy Google map + overlays creation in Ruby apps\"\t2285\t404\t2285\t\"JavaScript\"]}"
 --
 trending :: IO ()
-trending = 
-    let 
+trending =
+    let
         page = 1;
         per_page = 1; -- save some space...
         language = "Java";

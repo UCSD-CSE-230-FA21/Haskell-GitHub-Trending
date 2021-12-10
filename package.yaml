@@ -21,7 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/UCSD
 
 dependencies:
 - base >= 4.7 && < 5
-- brick
+- brick >= 0.65
 - aeson
 - req
 - text
@@ -32,6 +32,7 @@ dependencies:
 - tasty
 - tasty-hunit
 - split
+- open-browser
 
 library:
   source-dirs: src

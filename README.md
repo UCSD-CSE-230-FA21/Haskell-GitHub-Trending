@@ -20,7 +20,7 @@ GitHub Trending include recent most popular public GitHub repositories, and user
 
 Our goal is to implement a Haskell application to display the trending and repositories, and users could filter these trends by different categories like language, date, etc. and freely `click in` these repositories to see detailed contents.
 
-#### Tredning fetch
+#### Trending fetch
 
 Our application would fetch current trending from GitHub, and then display the trending in commandline GUI. 
 
