@@ -10,6 +10,9 @@ import qualified Model.Storage as S
 
 -- This is the service that provides bookmark information, and perform update ion disk
 
+defaultPath :: String
+defaultPath = "storage/store"
+
 -- | [Input]: A list of RepositoryIdentifier (definition in Model.Data), FilePath arg (Could use storePath in Model.Storage)
 -- [Output]: A list of Bool values, indicating whether a repo has been marked. their positions are fixed and the same as input list.
 batchQuery :: [D.RepositoryIdentifier] -> FilePath -> IO [Bool]

@@ -42,7 +42,6 @@ import qualified Data.Foldable as DF
 import qualified Model.Lib as ML
 import qualified Network as MN
 import qualified Model.Data as MD
-import qualified Model.Storage as MS
 import qualified Bookmark as B
 import qualified Brick.Main as M
 import Control.Monad.RWS.Lazy (MonadIO(liftIO))
@@ -93,14 +92,14 @@ appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do
-                    state <- liftIO $ VS.getAppState q (Just (MD.identifier ((l^.L.listElementsL) Vec.! i)) ) 
+                    state <- liftIO $ VS.getAppState q (Just (MD.identifier ((l^.L.listElementsL) Vec.! i))) 
                     M.suspendAndResume $ M.defaultMain VR.theApp state
 
         V.EvKey (V.KChar 's')  [] -> 
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
-                    _ <- liftIO $ B.addBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  MS.defaultPath         
+                    _ <- liftIO $ B.addBookMark (MD.identifier ((l^.L.listElementsL) Vec.! i)) B.defaultPath         
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
@@ -108,7 +107,7 @@ appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
-                    _ <- liftIO $ B.delBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  MS.defaultPath        
+                    _ <- liftIO $ B.delBookMark (MD.identifier ((l^.L.listElementsL) Vec.! i)) B.defaultPath        
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         

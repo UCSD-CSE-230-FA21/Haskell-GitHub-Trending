@@ -83,9 +83,6 @@ mapSize = do
 
 
 
-defaultPath :: String
-defaultPath = "storage/store"
-
 parseFromString :: Parser a -> String -> Either ParseError a
 parseFromString p = runParser p () "DUMMY"
 
