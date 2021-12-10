@@ -21,6 +21,9 @@ import qualified Data.Vector as Vec
 import qualified Data.Text as T
 import Brick.Types
   ( Widget
+  , ViewportType(Horizontal, Both)
+  , VScrollBarOrientation(..)
+  , HScrollBarOrientation(..)
   )
 import Brick.Widgets.Core
   ( (<+>)
@@ -28,8 +31,22 @@ import Brick.Widgets.Core
   , vLimit
   , hLimit
   , vBox
-  , withAttr
+  , hBox
+  , fill
+  , viewport
+  , padRight
+  , withVScrollBars
+  , withHScrollBars
+  , withHScrollBarRenderer
+  , withVScrollBarHandles
+  , withHScrollBarHandles
+  , withClickableHScrollBars
+  , withClickableVScrollBars
+  , ScrollbarRenderer(..)
+  , scrollbarAttr
+  , scrollbarHandleAttr
   )
+import Web.Browser (openBrowser)
 import Brick.Util (fg, on)
 import Data.Time.Clock (getCurrentTime, utctDay)
 -- import Data.Text (pack)
@@ -42,25 +59,90 @@ import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 
 import qualified View.State as VS
 
+data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
+          deriving (Ord, Show, Eq)
 
-appEvent :: VS.AppState -> T.BrickEvent () e -> T.EventM () (T.Next VS.AppState)
-appEvent l (T.VtyEvent e) =
-    case e of
-        V.EvKey V.KEsc [] -> M.halt l
-        _ -> M.continue l
+
+vp1Scroll :: M.ViewportScroll Name
+vp1Scroll = M.viewportScroll VP1
+
+vp2Scroll :: M.ViewportScroll Name
+vp2Scroll = M.viewportScroll VP2
+
+
+appEvent :: VS.AppState -> T.BrickEvent Name e -> T.EventM Name (T.Next VS.AppState)
+appEvent l (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1 >> M.continue l
+appEvent l (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1) >> M.continue l
+appEvent l (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1 >> M.continue l
+appEvent l (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1) >> M.continue l
+appEvent l (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt l
+appEvent l (T.MouseDown (SBClick el n) _ _ _) = do
+    case n of
+        VP1 -> do
+            let vp = M.viewportScroll VP1
+            case el of
+                T.SBHandleBefore -> M.hScrollBy vp (-1)
+                T.SBHandleAfter  -> M.hScrollBy vp 1
+                T.SBTroughBefore -> M.hScrollBy vp (-10)
+                T.SBTroughAfter  -> M.hScrollBy vp 10
+                T.SBBar          -> return ()
+        VP2 -> do
+            let vp = M.viewportScroll VP2
+            case el of
+                T.SBHandleBefore -> M.vScrollBy vp (-1)
+                T.SBHandleAfter  -> M.vScrollBy vp 1
+                T.SBTroughBefore -> M.vScrollBy vp (-10)
+                T.SBTroughAfter  -> M.vScrollBy vp 10
+                T.SBBar          -> return ()
+        _ ->
+            return ()
+    M.continue $ l
+
+        
 appEvent l _ = M.continue l
 
+customScrollbars :: ScrollbarRenderer n
+customScrollbars =
+    ScrollbarRenderer { renderScrollbar = fill '^'
+                      , renderScrollbarTrough = fill ' '
+                      , renderScrollbarHandleBefore = str "<<"
+                      , renderScrollbarHandleAfter = str ">>"
+                      }
 
-drawReadme :: VS.AppState -> [Widget ()]
-drawReadme (VS.AppState l r q _) = [ui]
+drawReadme :: VS.AppState -> [Widget Name]
+drawReadme as@(VS.AppState l r q _) = [ui]
     where
-        label = str "README.md"
         Just text = T.stripPrefix (T.pack "Right ") $ T.pack $ show $ MD.convertReadmeContent r
         texts = T.splitOn "\\n" $ text
-        box = B.borderWithLabel label $
-              hLimit 205 $
-              vBox $ map txtWrap texts
-        ui = withBorderStyle unicode $ C.vCenter box
+
+        ui = C.center $ hLimit 300 $ vLimit 100 $
+             (vBox [ pair
+                  --  , C.hCenter (str "README.md")
+                  --  , vBox $ map txtWrap texts
+                   ])
+
+        pair = 
+          -- hBox [ 
+                      B.border $
+
+                      withClickableHScrollBars SBClick $
+                      withHScrollBars OnBottom $
+                      withHScrollBarRenderer customScrollbars $
+                      withHScrollBarHandles $
+                      viewport VP1 Horizontal $
+                      hLimit 300 $
+                      vLimit 100 $
+
+                      withClickableVScrollBars SBClick $
+                      withVScrollBars OnLeft $
+                      withVScrollBarHandles $
+
+                      viewport VP2 Both $
+                      hLimit 300 $
+                      vLimit 1000 $
+                      vBox $ map txtWrap texts
+
+                    -- ]
 
 
 customAttr :: A.AttrName
@@ -73,7 +155,7 @@ theMap = A.attrMap V.defAttr
     , (customAttr,            fg V.cyan)
     ]
 
-theApp :: M.App VS.AppState e ()
+theApp :: M.App VS.AppState e Name
 theApp =
     M.App { M.appDraw = drawReadme
           , M.appChooseCursor = M.showFirstCursor
