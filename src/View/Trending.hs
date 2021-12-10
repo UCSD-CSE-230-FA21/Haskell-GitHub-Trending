@@ -38,7 +38,6 @@ import Data.Time.Clock (getCurrentTime, utctDay)
 import qualified Data.Text as DT
 import qualified Data.Map as DM
 import qualified Data.Foldable as DF
-import qualified Data.List as DL
 
 import qualified Model.Lib as ML
 import qualified Network as MN
