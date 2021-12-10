@@ -134,7 +134,7 @@ drawTable l bm= renderTable $  innerTable (Vec.toList (l^.L.listElementsL)) bm
 innerTable :: [MD.Repository]-> [VS.StampedBookmark] -> Table ()
 innerTable rs bm = 
     surroundingBorder False $ 
-    table $  [txt "Name", txt "Owner", txt "Star", txt "Watch", txt "Language", txt "Bookmark", txt "Marked Data"] : (zipWith repositoryToTable rs bm)
+    table $  [txt "Name", txt "Owner", txt "Star", txt "Watch", txt "Language", txt "Bookmark", txt "Marked Date"] : (zipWith repositoryToTable rs bm)
 
 repositoryToTable :: MD.Repository-> VS.StampedBookmark -> [Widget n]
 repositoryToTable (MD.Repository (MD.RepositoryIdentifier owner name ) des star fork watch language) (VS.StampedBookmark b Nothing) = 
