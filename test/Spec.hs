@@ -2,6 +2,7 @@ module Main where
 
 import Data (dataTest)
 import Storage (storageTest)
+import Filter (filterTest)
 import qualified Model.Lib as LB (version)
 
 import Test.Tasty
@@ -18,7 +19,7 @@ libTest = testGroup "Lib Test" [versionTest]
 -- Entry Point
 
 tests :: TestTree
-tests = testGroup "Client Tests" [dataTest, storageTest, libTest]
+tests = testGroup "Client Tests" [dataTest, storageTest, filterTest, libTest]
 
 main :: IO ()
 main = defaultMain tests

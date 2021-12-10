@@ -94,6 +94,7 @@ test-suite github-trending-test
   other-modules:
       Data
       Storage
+      Filter
       Paths_github_trending
   hs-source-dirs:
       test
