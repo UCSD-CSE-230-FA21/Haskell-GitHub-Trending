@@ -3,7 +3,6 @@
 module View.Readme where
 import Lens.Micro ((^.))
 import Control.Monad (void)
-import Web.Browser (openBrowser)
 
 import Brick (Widget, simpleMain, (<+>), str, txtWrap, withBorderStyle)
 import Brick.Widgets.Center (center)
@@ -105,11 +104,12 @@ drawReadme as@(VS.AppState l r _ _ _ ind) = [ui]
         ridName  = MD.ridName  $ MD.identifier ((l^.L.listElementsL) Vec.! ind)
         linkStr   = "https://github.com/" ++ ridOwner ++ "/" ++ ridName
         ui = C.center $ hLimit 300 $ vLimit 100 $
-             (vBox [
+             vBox [
                 C.hCenter $ str "Press \"l\" to open the repository link below:",
-                C.hCenter $ str linkStr, 
-                box 
-              ])
+                C.hCenter $ str linkStr,
+                C.hCenter $ str "Press \"esc\" to exit reading mode",
+                box
+              ]
         box = B.border $
               withClickableHScrollBars SBClick $
               withHScrollBars OnBottom $
