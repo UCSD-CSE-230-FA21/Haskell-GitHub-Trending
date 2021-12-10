@@ -25,3 +25,4 @@ cabal.project.local~
 .direnv
 
 ./**/*/.DS_Store
+.DS_Store
