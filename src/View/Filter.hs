@@ -127,13 +127,14 @@ startFilter :: IO MD.TrendingQuery
 startFilter = do
     st <- liftIO $ M.defaultMain theVFApp initialState
     today <- liftIO $ utctDay <$> getCurrentTime
+    let defaultDat = fromMaybe today (parseDay "2010-1-1")
     let
         s1 = unlines $ E.getEditContents $ st^.edit1
         s2 = unlines $ E.getEditContents $ st^.edit2
         s3 = unlines $ E.getEditContents $ st^.edit3
         s4 = unlines $ E.getEditContents $ st^.edit4
         lan = if all isSpace s1 then "*" else (trim s1)
-        dat = fromMaybe today (parseDay $ trim s2)
+        dat = fromMaybe defaultDat (parseDay $ trim s2)
         pag' = fromMaybe 1 (readMaybe s3)
         per' = fromMaybe 10 (readMaybe s4)
         pag = if pag'<0 || pag'>50 then 1 else pag'
