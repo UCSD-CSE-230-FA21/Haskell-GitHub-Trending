@@ -51,6 +51,7 @@ import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 import qualified View.Readme as VR
 import qualified View.Filter as VF
 import qualified View.State as VS
+import View.Filter (parseDay)
 
 
 drawTrending :: VS.AppState -> [Widget ()]
@@ -114,7 +115,8 @@ appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
         
         V.EvKey (V.KChar 'u') [] -> do
             today <- liftIO $ utctDay <$> getCurrentTime
-            state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" today 1 10) Nothing
+            let dat = fromMaybe today (parseDay "2010-1-1")
+            state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" dat 1 10) Nothing
             M.continue state
 
         ev -> M.continue =<< handleTrendingList ev s

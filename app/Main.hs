@@ -12,6 +12,8 @@ import Control.Exception
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Brick
 import Prelude hiding (repeat)
+import Data.Maybe (fromMaybe)
+import View.Filter (parseDay)
 
 version :: Widget ()
 version = str L.version
@@ -27,7 +29,8 @@ repeat False = do
 main :: IO ()
 main = do
   today <- utctDay <$> getCurrentTime
-  currentState <- VT.startTrending (MD.TrendingQuery "*" today 1 10)
+  let dat = fromMaybe today (parseDay "2010-1-1")
+  currentState <- VT.startTrending (MD.TrendingQuery "*" dat 1 10)
   if VS.shouldExit currentState then return () else repeat True
 
 
