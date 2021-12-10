@@ -116,7 +116,7 @@ parseLine = do
     let idt = D.RepositoryIdentifier owner repo
     case parseTimeM True defaultTimeLocale "%Y-%m-%d" date of
         Just d -> return (Record idt d)
-        Nothing -> fail "Wrong format in date field!"
+        Nothing -> fail ("Wrong format in date field: " ++ date)
 
 -- The input should be like "prefix,suffix,yyyy-mm-dd"
 init :: (MonadState MyMap m, MonadIO m) => FilePath -> m()
