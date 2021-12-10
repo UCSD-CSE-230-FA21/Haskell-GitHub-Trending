@@ -110,39 +110,33 @@ customScrollbars =
                       }
 
 drawReadme :: VS.AppState -> [Widget Name]
-drawReadme as@(VS.AppState l r q _) = [ui]
+drawReadme as@(VS.AppState l r q _ _) = [ui]
     where
         Just text = T.stripPrefix (T.pack "Right ") $ T.pack $ show $ MD.convertReadmeContent r
         texts = T.splitOn "\\n" $ text
 
         ui = C.center $ hLimit 300 $ vLimit 100 $
-             (vBox [ pair
-                  --  , C.hCenter (str "README.md")
-                  --  , vBox $ map txtWrap texts
-                   ])
+             (vBox [ box ])
 
-        pair = 
-          -- hBox [ 
-                      B.border $
+        box = B.border $
 
-                      withClickableHScrollBars SBClick $
-                      withHScrollBars OnBottom $
-                      withHScrollBarRenderer customScrollbars $
-                      withHScrollBarHandles $
-                      viewport VP1 Horizontal $
-                      hLimit 300 $
-                      vLimit 100 $
+              withClickableHScrollBars SBClick $
+              withHScrollBars OnBottom $
+              withHScrollBarRenderer customScrollbars $
+              withHScrollBarHandles $
+              viewport VP1 Horizontal $
+              hLimit 300 $
+              vLimit 100 $
 
-                      withClickableVScrollBars SBClick $
-                      withVScrollBars OnLeft $
-                      withVScrollBarHandles $
+              withClickableVScrollBars SBClick $
+              withVScrollBars OnLeft $
+              withVScrollBarHandles $
 
-                      viewport VP2 Both $
-                      hLimit 300 $
-                      vLimit 1000 $
-                      vBox $ map txtWrap texts
+              viewport VP2 Both $
+              hLimit 300 $
+              vLimit 1000 $
+              vBox $ map txtWrap texts
 
-                    -- ]
 
 
 customAttr :: A.AttrName

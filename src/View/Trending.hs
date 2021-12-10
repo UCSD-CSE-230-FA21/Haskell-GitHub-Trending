@@ -167,8 +167,6 @@ theApp =
           }
 
 
--- (MD.TrendingQuery "*" today 1 10)
-
 startTrending :: MD.TrendingQuery -> IO VS.AppState
 startTrending q = do
     as <- VS.getAppState q Nothing
