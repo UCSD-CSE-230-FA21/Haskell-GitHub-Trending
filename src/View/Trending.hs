@@ -54,7 +54,7 @@ import View.Filter (parseDay)
 
 
 drawTrending :: VS.AppState -> [Widget ()]
-drawTrending (VS.AppState l r q bm _) = [ui]
+drawTrending (VS.AppState l r q bm _ _) = [ui]
     where
         label = str "Github Trending " <+> cur <+> str " of " <+> total
         cur = case l^.L.listSelectedL of
@@ -80,7 +80,7 @@ drawTrending (VS.AppState l r q bm _) = [ui]
 
 
 appEvent :: VS.AppState -> T.BrickEvent () e -> T.EventM () (T.Next VS.AppState)
-appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
+appEvent s@(VS.AppState l r q bm _ _) (T.VtyEvent e) =
     case e of
         V.EvKey (V.KChar 'f') [] -> do
             jumpState <- liftIO $ VS.getEmptyAppState q False
@@ -93,7 +93,7 @@ appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do
-                    state <- liftIO $ VS.getAppState q (Just (MD.identifier ((l^.L.listElementsL) Vec.! i)) ) 
+                    state <- liftIO $ VS.getAppState q i (Just (MD.identifier ((l^.L.listElementsL) Vec.! i)) )
                     M.suspendAndResume $ M.defaultMain VR.theApp state
 
         V.EvKey (V.KChar 's')  [] -> 
@@ -115,16 +115,16 @@ appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
         V.EvKey (V.KChar 'u') [] -> do
             today <- liftIO $ utctDay <$> getCurrentTime
             let dat = fromMaybe today (parseDay "2010-1-1")
-            state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" dat 1 10) Nothing
+            state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" dat 1 10) 0 Nothing
             M.continue state
 
         ev -> M.continue =<< handleTrendingList ev s
 appEvent s _ = M.continue s
 
 handleTrendingList :: V.Event -> VS.AppState -> T.EventM () (VS.AppState)
-handleTrendingList e s@(VS.AppState theList r q bm _) = do
+handleTrendingList e s@(VS.AppState theList r q bm _ _) = do
     nextList <- L.handleListEvent e theList
-    return $ VS.AppState nextList r q bm False
+    return $ VS.AppState nextList r q bm False 0
 
 
 listDrawElement :: Bool -> MD.Repository -> Widget ()
@@ -169,5 +169,5 @@ theApp =
 
 startTrending :: MD.TrendingQuery -> IO VS.AppState
 startTrending q = do
-    as <- VS.getAppState q Nothing
+    as <- VS.getAppState q 0 Nothing
     M.defaultMain theApp as
