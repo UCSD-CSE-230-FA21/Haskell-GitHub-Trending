@@ -34,7 +34,7 @@ data RepositoryIdentifier = RepositoryIdentifier {
 
 data Repository = Repository {
   identifier :: RepositoryIdentifier,
-  description :: String,
+  description :: Maybe String,
   star :: Int,
   fork :: Int,
   watcher :: Int,

@@ -14,24 +14,23 @@ import Brick
 import Prelude hiding (repeat)
 import Data.Maybe (fromMaybe)
 import View.Filter (parseDay)
+import qualified Control.Monad
 
 version :: Widget ()
 version = str L.version
 
-repeat :: Bool -> IO ()
-repeat True = do
+repeat :: IO ()
+repeat= do
   q <- VF.startFilter
   currentState <- VT.startTrending q
-  if VS.shouldExit currentState then repeat False else repeat True
-repeat False = do
-  return ()
+  Control.Monad.unless (VS.shouldExit currentState) repeat
 
 main :: IO ()
 main = do
   today <- utctDay <$> getCurrentTime
   let dat = fromMaybe today (parseDay "2010-1-1")
   currentState <- VT.startTrending (MD.TrendingQuery "*" dat 1 10)
-  if VS.shouldExit currentState then return () else repeat True
+  Control.Monad.unless (VS.shouldExit currentState) repeat
 
 
 -- The following is for testing/playground 

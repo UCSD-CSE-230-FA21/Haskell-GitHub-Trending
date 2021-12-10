@@ -10,6 +10,9 @@ import qualified Model.Storage as S
 
 -- This is the service that provides bookmark information, and perform update ion disk
 
+defaultPath :: String
+defaultPath = "storage/store"
+
 -- | [Input]: A list of RepositoryIdentifier (definition in Model.Data), FilePath arg (Could use storePath in Model.Storage)
 -- [Output]: A list of Bool values, indicating whether a repo has been marked. their positions are fixed and the same as input list.
 batchQuery :: [D.RepositoryIdentifier] -> FilePath -> IO [Bool]
@@ -24,6 +27,11 @@ singleQuery idt fp = evalStateT (do {S.init fp; S.exist idt}) S.dictionary
 -- [Output]: Maybe Day (Nothing | Just Day), indicating the date when the input repo was marked or Nothing
 dateQuery :: D.RepositoryIdentifier -> FilePath -> IO (Maybe Day)
 dateQuery idt fp = evalStateT (do {S.init fp; S.pickUpDate idt}) S.dictionary
+
+-- | [Input]: A list of RepositoryIdentifier  (definition in Model.Data), FilePath arg (Could use storePath in Model.Storage)
+-- [Output]:  A list of Maybe Day (Nothing | Just Day), indicating the date when the input repos were marked or Nothing
+batchDateQuery :: [D.RepositoryIdentifier] -> FilePath -> IO [Maybe Day]
+batchDateQuery idt fp = evalStateT (do {S.init fp; S.pickUpMany idt}) S.dictionary
 
 -- | [Input]: One single RepositoryIdentifier (definition in Model.Data), FilePath arg (Could use storePath in Model.Storage)
 -- [Output]: The size of current bookmark map

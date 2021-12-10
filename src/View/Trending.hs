@@ -42,7 +42,6 @@ import qualified Data.Foldable as DF
 import qualified Model.Lib as ML
 import qualified Network as MN
 import qualified Model.Data as MD
-import qualified Model.Storage as MS
 import qualified Bookmark as B
 import qualified Brick.Main as M
 import Control.Monad.RWS.Lazy (MonadIO(liftIO))
@@ -62,7 +61,7 @@ drawTrending (VS.AppState l r q bm _ _) = [ui]
                 Just i -> str (show (i + 1))
         total = str $ show $ Vec.length $ l^.L.listElementsL
         box1 = WB.borderWithLabel (str "Press \"Enter\" to see ReadMe , \"s/d\" to add/delete bookmark") $
-              hLimit 70 $
+              hLimit 87 $
               vLimit 3$
               L.renderList listDrawElement True l
         box2 = WB.borderWithLabel label $
@@ -70,13 +69,6 @@ drawTrending (VS.AppState l r q bm _ _) = [ui]
               vLimit 50 $
               drawTable l bm
         ui = C.hCenter $ vBox [ box1, box2, str "Press \"Esc\" to exit, \"u\" to refresh, \"f\" to set filter" ]   
-    --    ui = C.vCenter $ vBox [ C.hCenter box
-    --                          , str " "
-    --                         , C.hCenter $ str "Press Enter to see ReadMe"
-    --                          , C.hCenter $ str "Press u to refresh"
-    --                          , C.hCenter $ str "Press f to set filter"
-    --                          , C.hCenter $ str "Press Esc to exit."
-    --                          ]
 
 
 appEvent :: VS.AppState -> T.BrickEvent () e -> T.EventM () (T.Next VS.AppState)
@@ -100,7 +92,7 @@ appEvent s@(VS.AppState l r q bm _ _) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
-                    _ <- liftIO $ B.addBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  MS.defaultPath         
+                    _ <- liftIO $ B.addBookMark (MD.identifier ((l^.L.listElementsL) Vec.! i)) B.defaultPath         
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
@@ -108,7 +100,7 @@ appEvent s@(VS.AppState l r q bm _ _) (T.VtyEvent e) =
             case l^.L.listSelectedL of
                 Nothing -> M.continue s
                 Just i -> do        
-                    _ <- liftIO $ B.delBookMark  (MD.identifier ((l^.L.listElementsL) Vec.! i))  MS.defaultPath        
+                    _ <- liftIO $ B.delBookMark (MD.identifier ((l^.L.listElementsL) Vec.! i)) B.defaultPath        
                     state <- liftIO $ VS.updateBookmark s
                     M.continue state 
         
@@ -130,21 +122,25 @@ handleTrendingList e s@(VS.AppState theList r q bm _ _) = do
 listDrawElement :: Bool -> MD.Repository -> Widget ()
 listDrawElement sel (MD.Repository (MD.RepositoryIdentifier owner name ) des _ _ _ _ )= 
     if sel
-    then renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)],[txt (DT.pack des) ]]
+    then case des of
+        Just s -> renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)],[txt (DT.pack s) ]]
+        Nothing -> renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)],[txt (DT.pack "No description") ]]
     else renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)]]
 
 
-drawTable :: (L.List () MD.Repository)->[Bool] -> Widget ()
+drawTable :: (L.List () MD.Repository)->[VS.StampedBookmark] -> Widget ()
 drawTable l bm= renderTable $  innerTable (Vec.toList (l^.L.listElementsL)) bm 
 
-innerTable :: [MD.Repository]-> [Bool] -> Table ()
+innerTable :: [MD.Repository]-> [VS.StampedBookmark] -> Table ()
 innerTable rs bm = 
     surroundingBorder False $ 
-    table $  [txt "Name", txt "Owner", txt "Star", txt "Watch", txt "Language", txt "Bookmark"] : (zipWith repositoryToTable rs bm)
+    table $  [txt "Name", txt "Owner", txt "Star", txt "Watch", txt "Language", txt "Bookmark", txt "Marked Data"] : (zipWith repositoryToTable rs bm)
 
-repositoryToTable :: MD.Repository-> Bool -> [Widget n]
-repositoryToTable (MD.Repository (MD.RepositoryIdentifier owner name ) des star fork watch language) b = 
-    [ txt (DT.pack name), txt(DT.pack owner), txt(DT.pack (show star)), txt (DT.pack (show watch)), txt (DT.pack language), txt (DT.pack (show b)) ]   
+repositoryToTable :: MD.Repository-> VS.StampedBookmark -> [Widget n]
+repositoryToTable (MD.Repository (MD.RepositoryIdentifier owner name ) des star fork watch language) (VS.StampedBookmark b Nothing) = 
+    [ txt (DT.pack name), txt(DT.pack owner), txt(DT.pack (show star)), txt (DT.pack (show watch)), txt (DT.pack language), txt (DT.pack (show b)), txt "          " ]   
+repositoryToTable (MD.Repository (MD.RepositoryIdentifier owner name ) des star fork watch language) (VS.StampedBookmark b (Just dy)) = 
+    [ txt (DT.pack name), txt(DT.pack owner), txt(DT.pack (show star)), txt (DT.pack (show watch)), txt (DT.pack language), txt (DT.pack (show b)), txt (DT.pack (show dy))]   
 
 
 customAttr :: A.AttrName
@@ -152,8 +148,8 @@ customAttr = L.listSelectedAttr <> "custom"
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
-    [ (L.listAttr,            V.white `on` V.blue)
-    , (L.listSelectedAttr,    V.blue `on` V.white)
+    [ (L.listAttr,            V.white `on` V.green)
+    , (L.listSelectedAttr,    V.white `on` V.green)
     , (customAttr,            fg V.cyan)
     ]
 
