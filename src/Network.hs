@@ -46,7 +46,7 @@ getTrendingRequest query =
   let 
     lang = "language:" ++ (show (D.tLanguage query));
     day = formatTime defaultTimeLocale "%Y-%m-%d" $ D.sinceDay query;
-    since = "created:<" ++ day;
+    since = "created:>=" ++ day;
     qry = lang ++ " " ++ since;
     searchQueries = (
       ("sort" =: ("stars" :: Text))

@@ -30,6 +30,8 @@ import Brick.Util (on)
 -- import qualified View.Trending as VT
 import qualified View.State as VS
 import qualified Model.Data as MD
+import Data.Maybe ( fromMaybe )
+import Text.Read (readMaybe)
 data Name = Edit1
           | Edit2
           | Edit3
@@ -104,36 +106,37 @@ parseDay s = DTF.parseTimeM True DTF.defaultTimeLocale "%Y-%-m-%-d" s
 
 ----------------------------- helper functions -----------------------------
 
+theVFApp :: M.App St e Name
+theVFApp =
+    M.App { M.appDraw = drawUI
+          , M.appChooseCursor = appCursor
+          , M.appHandleEvent = appEvent
+          , M.appStartEvent = return
+          , M.appAttrMap = const theMap
+          }
 
--- main :: IO ()
--- main = do
---     st <- M.defaultMain theApp VT.VFinitialState
---     today <- utctDay <$> getCurrentTime
---     let
---         s1 = unlines $ E.getEditContents $ st^.edit1
---         s2 = unlines $ E.getEditContents $ st^.edit2
---         s3 = unlines $ E.getEditContents $ st^.edit3
---         s4 = unlines $ E.getEditContents $ st^.edit4
---         lan = if all isSpace s1 then "*" else (trim s1)
---         dat = if all isSpace s2 then today else (parseDay $ trim s2)
---         pag = if all isSpace s3 then 1 else (read s3::Int)
---         per = if all isSpace s4 then 10 else (read s4::Int)
---     as <- VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
---     void $ M.defaultMain VT.theApp as
+initialState :: St
+initialState =
+    St (F.focusRing [Edit1, Edit2, Edit3, Edit4])
+       (E.editor Edit1 (Just 1) "")
+       (E.editor Edit2 (Just 1) "")
+       (E.editor Edit3 (Just 1) "")
+       (E.editor Edit4 (Just 1) "")
 
-
-
-
-            -- do
-            -- today <- liftIO $ utctDay <$> getCurrentTime
-            -- let
-            --     s1 = unlines $ E.getEditContents $ st^.edit1
-            --     s2 = unlines $ E.getEditContents $ st^.edit2
-            --     s3 = unlines $ E.getEditContents $ st^.edit3
-            --     s4 = unlines $ E.getEditContents $ st^.edit4
-            --     lan = if all isSpace s1 then "*" else (trim s1)
-            --     dat = if all isSpace s2 then today else (parseDay $ trim s2)
-            --     pag = if all isSpace s3 then 1 else (read s3::Int)
-            --     per = if all isSpace s4 then 10 else (read s4::Int)
-            -- as <- liftIO $ VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
-            -- M.suspendAndResume $ M.defaultMain VT.theApp as
+startFilter :: IO MD.TrendingQuery
+startFilter = do
+    st <- liftIO $ M.defaultMain theVFApp initialState
+    today <- liftIO $ utctDay <$> getCurrentTime
+    let defaultDat = fromMaybe today (parseDay "2010-1-1")
+    let
+        s1 = unlines $ E.getEditContents $ st^.edit1
+        s2 = unlines $ E.getEditContents $ st^.edit2
+        s3 = unlines $ E.getEditContents $ st^.edit3
+        s4 = unlines $ E.getEditContents $ st^.edit4
+        lan = if all isSpace s1 then "*" else (trim s1)
+        dat = fromMaybe defaultDat (parseDay $ trim s2)
+        pag' = fromMaybe 1 (readMaybe s3)
+        per' = fromMaybe 10 (readMaybe s4)
+        pag = if pag'<0 || pag'>50 then 1 else pag'
+        per = if per'<0 || per'>100 then 10 else per'
+    return (MD.TrendingQuery lan dat pag per)

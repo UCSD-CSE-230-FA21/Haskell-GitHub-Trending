@@ -165,9 +165,3 @@ theApp =
           }
 
 
-main :: IO ()
-main = do
-    today <- utctDay <$> getCurrentTime
-    as <- VS.getAppState (MD.TrendingQuery "*" today 1 10)  Nothing
-    void $ M.defaultMain theApp as 
-

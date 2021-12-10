@@ -38,7 +38,6 @@ import Data.Time.Clock (getCurrentTime, utctDay)
 import qualified Data.Text as DT
 import qualified Data.Map as DM
 import qualified Data.Foldable as DF
-import qualified Data.List as DL
 
 import qualified Model.Lib as ML
 import qualified Network as MN
@@ -51,11 +50,11 @@ import Control.Monad.RWS.Lazy (MonadIO(liftIO))
 import qualified View.Readme as VR
 import qualified View.Filter as VF
 import qualified View.State as VS
-import Text.Read (readMaybe)
+import View.Filter (parseDay)
 
 
 drawTrending :: VS.AppState -> [Widget ()]
-drawTrending (VS.AppState l r q bm) = [ui]
+drawTrending (VS.AppState l r q bm _) = [ui]
     where
         label = str "Github Trending " <+> cur <+> str " of " <+> total
         cur = case l^.L.listSelectedL of
@@ -81,27 +80,14 @@ drawTrending (VS.AppState l r q bm) = [ui]
 
 
 appEvent :: VS.AppState -> T.BrickEvent () e -> T.EventM () (T.Next VS.AppState)
-appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
+appEvent s@(VS.AppState l r q bm _) (T.VtyEvent e) =
     case e of
-        -- Todo: emplement filter
         V.EvKey (V.KChar 'f') [] -> do
-            st <- liftIO $ M.defaultMain theVFApp initialState
-            today <- liftIO $ utctDay <$> getCurrentTime
-            let
-                s1 = unlines $ E.getEditContents $ st^.VF.edit1
-                s2 = unlines $ E.getEditContents $ st^.VF.edit2
-                s3 = unlines $ E.getEditContents $ st^.VF.edit3
-                s4 = unlines $ E.getEditContents $ st^.VF.edit4
-                lan = if all isSpace s1 then "*" else (VF.trim s1)
-                dat = fromMaybe today (VF.parseDay $ VF.trim s2)
-                pag' = fromMaybe 1 (readMaybe s3)
-                per' = fromMaybe 10 (readMaybe s4)
-                pag = if pag'<0 || pag'>50 then 1 else pag'
-                per = if per'<0 || per'>100 then 10 else per'
-            newState <- liftIO $ VS.getAppState (MD.TrendingQuery lan dat pag per) Nothing
-            M.continue newState
-    -- M.suspendAndResume $ M.defaultMain VF.theApp VF.initialState
-        V.EvKey V.KEsc [] -> M.halt s
+            jumpState <- liftIO $ VS.getEmptyAppState q False
+            M.halt jumpState
+        V.EvKey V.KEsc [] -> do
+            jumpState <- liftIO $ VS.getEmptyAppState q True
+            M.halt jumpState
         
         V.EvKey V.KEnter [] -> 
             case l^.L.listSelectedL of
@@ -128,16 +114,17 @@ appEvent s@(VS.AppState l r q bm) (T.VtyEvent e) =
         
         V.EvKey (V.KChar 'u') [] -> do
             today <- liftIO $ utctDay <$> getCurrentTime
-            state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" today 1 10) Nothing
+            let dat = fromMaybe today (parseDay "2010-1-1")
+            state <- liftIO $ VS.getAppState (MD.TrendingQuery "*" dat 1 10) Nothing
             M.continue state
 
         ev -> M.continue =<< handleTrendingList ev s
 appEvent s _ = M.continue s
 
 handleTrendingList :: V.Event -> VS.AppState -> T.EventM () (VS.AppState)
-handleTrendingList e s@(VS.AppState theList r q bm) = do
+handleTrendingList e s@(VS.AppState theList r q bm _) = do
     nextList <- L.handleListEvent e theList
-    return $ VS.AppState nextList r q bm
+    return $ VS.AppState nextList r q bm False
 
 
 listDrawElement :: Bool -> MD.Repository -> Widget ()
@@ -180,26 +167,9 @@ theApp =
           }
 
 
-theVFApp :: M.App VF.St e VF.Name
-theVFApp =
-    M.App { M.appDraw = VF.drawUI
-          , M.appChooseCursor = VF.appCursor
-          , M.appHandleEvent = VF.appEvent
-          , M.appStartEvent = return
-          , M.appAttrMap = const VF.theMap
-          }
+-- (MD.TrendingQuery "*" today 1 10)
 
-
-initialState :: VF.St
-initialState =
-    VF.St (F.focusRing [VF.Edit1, VF.Edit2, VF.Edit3, VF.Edit4])
-       (E.editor VF.Edit1 (Just 1) "")
-       (E.editor VF.Edit2 (Just 1) "")
-       (E.editor VF.Edit3 (Just 1) "")
-       (E.editor VF.Edit4 (Just 1) "")
-
-main :: IO ()
-main = do
-    today <- utctDay <$> getCurrentTime
-    as <- VS.getAppState (MD.TrendingQuery "*" today 1 10) Nothing
-    void $ M.defaultMain theApp as 
+startTrending :: MD.TrendingQuery -> IO VS.AppState
+startTrending q = do
+    as <- VS.getAppState q Nothing
+    M.defaultMain theApp as
