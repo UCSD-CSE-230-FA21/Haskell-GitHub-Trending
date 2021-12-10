@@ -24,6 +24,7 @@ r2 = MS.Record idt2 day
 
 line1 = "a1,b-1,1996-11-08"
 line2 = "a-2,b2,1996-11-08"
+line3 = "a-2,b2,1996-11-0"
 storePath = "storage/test"
 
 storageFileParsingTest :: TestTree
@@ -38,6 +39,11 @@ storageFileParsingTest = testGroup "Testing storageFileParsing"
             case MS.parseFromString MS.parseLine line2 of
                 Left err -> False
                 Right r -> r == r2
+        @?= True,
+        testCase "Should not parse invalid line 3" $
+            case MS.parseFromString MS.parseLine line3 of
+                Left err -> True
+                Right r -> False
         @?= True
     ]
 

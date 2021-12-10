@@ -6,7 +6,7 @@
 module Model.Storage where
 
 import           Control.Monad.State
-import           Data.Time(Day, defaultTimeLocale, formatTime, parseTimeOrError)
+import           Data.Time(Day, defaultTimeLocale, formatTime, parseTimeM)
 import           System.IO
 import           System.Directory
 import           Text.Parsec hiding (State)
@@ -114,8 +114,9 @@ parseLine = do
     date <- many1 sepParser
 
     let idt = D.RepositoryIdentifier owner repo
-    let time = parseTimeOrError True defaultTimeLocale "%Y-%m-%d" date
-    return (Record idt time)
+    case parseTimeM True defaultTimeLocale "%Y-%m-%d" date of
+        Just d -> return (Record idt d)
+        Nothing -> fail "Wrong format in date field!"
 
 -- The input should be like "prefix,suffix,yyyy-mm-dd"
 init :: (MonadState MyMap m, MonadIO m) => FilePath -> m()
