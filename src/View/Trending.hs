@@ -129,7 +129,9 @@ handleTrendingList e s@(VS.AppState theList r q bm _) = do
 listDrawElement :: Bool -> MD.Repository -> Widget ()
 listDrawElement sel (MD.Repository (MD.RepositoryIdentifier owner name ) des _ _ _ _ )= 
     if sel
-    then renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)],[txt (DT.pack des) ]]
+    then case des of
+        Just s -> renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)],[txt (DT.pack s) ]]
+        Nothing -> renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)],[txt (DT.pack "No description") ]]
     else renderTable $ surroundingBorder False $ alignCenter 1 $ table [[txt (DT.pack name)]]
 
 
