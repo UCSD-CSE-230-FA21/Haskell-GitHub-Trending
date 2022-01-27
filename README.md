@@ -142,3 +142,17 @@ stack run
 ```
 
 be sure you have stack installed.
+
+## Execution Screenshot
+
+**Start page**
+
+![home](./img/home.jpg)
+
+**Query input**
+
+![query](./img/query.jpg)
+
+**Repo Readme**
+
+![readme](./img/readme.jpg)
